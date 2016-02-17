@@ -85,7 +85,8 @@ public class DefaultGL
      * Creates a new GLGraphicsObject with the given indices.
      * 
      * @param indicesDataBuffer The indices data buffer
-     * @param dataBuffers 
+     * @param dataBuffers The mapping from {@link Attribute}s to
+     * {@link GLDataBuffer}s
      * @return The {@link GLGraphicsObject}
      */
     public static GLGraphicsObject createGLGraphicsObject(

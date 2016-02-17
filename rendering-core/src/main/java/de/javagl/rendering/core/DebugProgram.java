@@ -45,9 +45,9 @@ public class DebugProgram implements Program
     
     /**
      * Only for debugging
-     * @param name
-     * @param vsName
-     * @param fsName
+     * @param name Only for debugging
+     * @param vsName Only for debugging
+     * @param fsName Only for debugging
      */
     public DebugProgram(String name, String vsName, String fsName)
     {

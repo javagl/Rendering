@@ -168,8 +168,8 @@ public class Programs
     
     /**
      * Only for debugging.
-     * @param vertexShaderFileName
-     * @param fragmentShaderFileName
+     * @param vertexShaderFileName Only for debugging
+     * @param fragmentShaderFileName Only for debugging
      * @return Nothing special.
      */
     public static Program createDebugProgramFromFiles(

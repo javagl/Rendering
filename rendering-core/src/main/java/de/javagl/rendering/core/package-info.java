@@ -1,7 +1,5 @@
 /**
  * The main classes of the JavaGL Rendering Core.
- * <p>
- * 
  * 
  * <h2>Structure</h2>
  * 
@@ -356,7 +354,6 @@
  *   <li>
  *     Unbind all previously bound buffers
  *   </li>
- *   </ul>
  * </ul>
  * <br>
  * <br>
