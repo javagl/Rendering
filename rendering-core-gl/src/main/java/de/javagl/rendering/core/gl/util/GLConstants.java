@@ -1,0 +1,174 @@
+/*
+ * www.javagl.de - Rendering
+ * 
+ * Copyright 2010-2016 Marco Hutter - http://www.javagl.de
+ * 
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package de.javagl.rendering.core.gl.util;
+
+/**
+ * Some common GL constants.
+ */
+public class GLConstants
+{
+    /**
+     * The GL_BGR constant
+     */
+    public static final int GL_BGR = 32992;
+    
+    /**
+     * The GL_RGB constant
+     */
+    public static final int GL_RGB = 6407;
+    
+    /**
+     * The GL_RGBA constant
+     */
+    public static final int GL_RGBA = 6408;
+    
+    /**
+     * The GL_BGRA constant
+     */
+    public static final int GL_BGRA = 32993;
+    
+
+    
+    /**
+     * The GL_BYTE constant
+     */
+    public static final int GL_BYTE = 5120;
+    
+    /**
+     * The GL_UNSIGNED_BYTE constant
+     */
+    public static final int GL_UNSIGNED_BYTE = 5121;
+
+    /**
+     * The GL_SHORT constant
+     */
+    public static final int GL_SHORT = 5122;
+    
+    /**
+     * The GL_UNSIGNED_SHORT constant
+     */
+    public static final int GL_UNSIGNED_SHORT = 5123;
+    
+    /**
+     * The GL_INT constant
+     */
+    public static final int GL_INT = 5124;
+
+    /**
+     * The GL_UNSIGNED_INT constant
+     */
+    public static final int GL_UNSIGNED_INT = 5125;
+    
+    /**
+     * The GL_FLOAT constant
+     */
+    public static final int GL_FLOAT = 5126;
+    
+    
+    
+    /**
+     * The GL_POINTS constant
+     */
+    public static final int GL_POINTS = 0;
+
+    /**
+     * The GL_LINES constant
+     */
+    public static final int GL_LINES = 1;
+
+    /**
+     * The GL_LINE_LOOP constant
+     */
+    public static final int GL_LINE_LOOP = 2;
+
+    /**
+     * The GL_LINE_STRIP constant
+     */
+    public static final int GL_LINE_STRIP = 3;
+
+    /**
+     * The GL_TRIANGLES constant
+     */
+    public static final int GL_TRIANGLES = 4;    
+
+    /**
+     * The GL_TRIANGLE_STRIP constant
+     */
+    public static final int GL_TRIANGLE_STRIP = 5;
+
+    /**
+     * The GL_TRIANGLE_FAN constant
+     */
+    public static final int GL_TRIANGLE_FAN = 6;
+    
+    
+    /**
+     * Returns the String representation of the given constant
+     * 
+     * @param constant The constant
+     * @return The String for the constant
+     */
+    public static String stringFor(int constant)
+    {
+        switch (constant)
+        {
+            case GL_BGR : return "GL_BGR";
+            case GL_RGB : return "GL_RGB";
+            case GL_RGBA : return "GL_RGBA";
+            case GL_BGRA : return "GL_BGRA";
+
+            case GL_BYTE : return "GL_BYTE";
+            case GL_UNSIGNED_BYTE : return "GL_UNSIGNED_BYTE";
+            case GL_SHORT : return "GL_SHORT";
+            case GL_UNSIGNED_SHORT : return "GL_UNSIGNED_SHORT";
+            case GL_INT : return "GL_INT";
+            case GL_UNSIGNED_INT : return "GL_UNSIGNED_INT";
+            case GL_FLOAT : return "GL_FLOAT";
+            
+            case GL_POINTS: return "GL_POINTS";
+            case GL_LINES: return "GL_LINES";
+            case GL_LINE_LOOP: return "GL_LINE_LOOP";
+            case GL_LINE_STRIP: return "GL_LINE_STRIP";
+            case GL_TRIANGLES: return "GL_TRIANGLES";
+            case GL_TRIANGLE_STRIP: return "GL_TRIANGLE_STRIP";
+            
+            default:
+                return "INVALID_CONSTANT["+constant+"]";
+        }
+    }
+    
+    /**
+     * Private constructor to prevent instantiation
+     */
+    private GLConstants()
+    {
+        // Private constructor to prevent instantiation
+    }
+    
+    
+}
