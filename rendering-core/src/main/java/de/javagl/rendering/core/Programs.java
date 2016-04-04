@@ -71,22 +71,44 @@ public class Programs
     {
         try
         {
-            Shader[] shaders =
-            { 
-                new DefaultShader(ShaderType.VERTEX, 
-                    IOUtils.readFileAsString(vertexShaderFileName)), 
-                new DefaultShader(ShaderType.FRAGMENT, 
-                    IOUtils.readFileAsString(fragmentShaderFileName)) 
-            };
-            Program program = new DefaultProgram(
-                ("Program-"+String.valueOf(counter++)), shaders);
-            return program;
+            String vertexShaderSourceCode = 
+                IOUtils.readFileAsString(vertexShaderFileName);
+            String fragmentShaderSourceCode = 
+                IOUtils.readFileAsString(fragmentShaderFileName);
+            return createFromSourceCode(
+                vertexShaderSourceCode, 
+                fragmentShaderSourceCode);
         }
         catch (IOException e)
         {
             throw new RenderingException("Could not read shaders", e);
         }
     }
+    
+    /**
+     * Creates a new default {@link Program} with the given 
+     * vertex- and fragment {@link Shader}.
+     * 
+     * @param vertexShaderSourceCode The vertex {@link Shader} source code
+     * @param fragmentShaderSourceCode The fragment {@link Shader} source code
+     * @return The {@link Program} instance.
+     */
+    public static Program createFromSourceCode(
+        String vertexShaderSourceCode, 
+        String fragmentShaderSourceCode)
+    {
+        Shader[] shaders =
+        { 
+            new DefaultShader(ShaderType.VERTEX, 
+                vertexShaderSourceCode), 
+            new DefaultShader(ShaderType.FRAGMENT, 
+                fragmentShaderSourceCode) 
+        };
+        Program program = new DefaultProgram(
+            ("Program-"+String.valueOf(counter++)), shaders);
+        return program;
+    }
+    
     
     /**
      * Creates a new default {@link Program} with the specified 
@@ -124,8 +146,9 @@ public class Programs
     
     
     /**
-     * Creates a new default program with the given specified vertex- and 
-     * fragment {@link Shader}.
+     * Creates a new default program with the given vertex- and fragment 
+     * {@link Shader}. The given streams will be closed after they have
+     * been read.
      * 
      * @param vertexShaderInputStream The vertex {@link Shader} input stream
      * @param fragmentShaderInputStream The fragment {@link Shader} input 
@@ -140,16 +163,13 @@ public class Programs
     {
         try
         {
-            Shader[] shaders =
-            { 
-                new DefaultShader(ShaderType.VERTEX, 
-                    IOUtils.readStreamAsString(vertexShaderInputStream)), 
-                new DefaultShader(ShaderType.FRAGMENT, 
-                    IOUtils.readStreamAsString(fragmentShaderInputStream)) 
-            };
-            Program program = new DefaultProgram(
-                ("Program-"+String.valueOf(counter++)), shaders);
-            return program;
+            String vertexShaderSourceCode = 
+                IOUtils.readStreamAsString(vertexShaderInputStream);
+            String fragmentShaderSourceCode = 
+                IOUtils.readStreamAsString(fragmentShaderInputStream);
+            return createFromSourceCode(
+                vertexShaderSourceCode, 
+                fragmentShaderSourceCode);
         }
         catch (IOException e)
         {

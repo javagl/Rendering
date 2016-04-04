@@ -35,7 +35,7 @@ import java.io.InputStream;
 import java.util.logging.Logger;
 
 /**
- * Package-pricate IO utility methods
+ * Package-private IO utility methods
  */
 class IOUtils
 {
