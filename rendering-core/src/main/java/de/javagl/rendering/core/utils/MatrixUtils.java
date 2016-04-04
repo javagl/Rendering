@@ -335,16 +335,31 @@ public class MatrixUtils
      */
     public static Matrix4f inverse(Matrix4f matrix)
     {
-        Matrix4f result = new Matrix4f();
+        return inverse(matrix, new Matrix4f());
+    }
+    
+    /**
+     * Sets the given result matrix to be the inverse of the given matrix.
+     * Sets it to identity if the given matrix can not be inverted.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param matrix The matrix to invert
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f inverse(Matrix4f matrix, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
         try
         {
-            result.invert(matrix);
+            localResult.invert(matrix);
         }
         catch (SingularMatrixException e)
         {
-            result.setIdentity();
+            localResult.setIdentity();
         }
-        return result;
+        return localResult;
     }
     
     /**
@@ -356,9 +371,24 @@ public class MatrixUtils
      */
     public static Matrix4f transposed(Matrix4f matrix)
     {
-        Matrix4f result = new Matrix4f();
-        result.transpose(matrix);
-        return result;
+        return transposed(matrix, new Matrix4f());
+    }
+    
+    /**
+     * Transposes the given matrix, and store the result in the given result 
+     * matrix. 
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param matrix The matrix to transpose
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f transposed(Matrix4f matrix, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.transpose(matrix);
+        return localResult;
     }
     
     
@@ -371,48 +401,110 @@ public class MatrixUtils
      */
     public static Matrix4f scaling(double s)
     {
-        Matrix4f result = identity();
-        result.setScale((float)s);
+        return scaling(s, new Matrix4f());
+    }
+    
+    /**
+     * Set the given result matrix to be a matrix describing the uniform scale
+     * about the given factor. 
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param s The scaling
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f scaling(double s, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.setIdentity();
+        localResult.setScale((float)s);
         return result;
     }
+    
     
     /**
      * Creates and returns a rotation matrix.
      * 
-     * @param angleRad The angle, in radians
+     * @param angleRad The angle, about the x-axis, in radians
      * @return The matrix
      */
     public static Matrix4f rotX(double angleRad)
     {
-        Matrix4f result = identity();
-        result.rotX((float)angleRad);
-        return result;
+        return rotX(angleRad, new Matrix4f());
+    }
+    
+    /**
+     * Set the given matrix to be a rotation matrix about the given angle.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param angleRad The angle, about the x-axis, in radians
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f rotX(double angleRad, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.setIdentity();
+        localResult.rotX((float)angleRad);
+        return localResult;
     }
     
     /**
      * Creates and returns a rotation matrix.
      * 
-     * @param angleRad The angle, in radians
+     * @param angleRad The angle, about the y-axis, in radians
      * @return The matrix
      */
     public static Matrix4f rotY(double angleRad)
     {
-        Matrix4f result = identity();
-        result.rotY((float)angleRad);
-        return result;
+        return rotY(angleRad, new Matrix4f());
     }
     
     /**
+     * Set the given matrix to be a rotation matrix about the given angle.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param angleRad The angle, about the y-axis, in radians
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f rotY(double angleRad, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.setIdentity();
+        localResult.rotY((float)angleRad);
+        return localResult;
+    }
+
+    /**
      * Creates and returns a rotation matrix.
      * 
-     * @param angleRad The angle, in radians
+     * @param angleRad The angle, about the z-axis, in radians
      * @return The matrix
      */
     public static Matrix4f rotZ(double angleRad)
     {
-        Matrix4f result = identity();
-        result.rotZ((float)angleRad);
-        return result;
+        return rotZ(angleRad, new Matrix4f());
+    }
+    
+    /**
+     * Set the given matrix to be a rotation matrix about the given angle.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param angleRad The angle, about the z-axis, in radians
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f rotZ(double angleRad, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.setIdentity();
+        localResult.rotZ((float)angleRad);
+        return localResult;
     }
     
     /**
@@ -427,6 +519,20 @@ public class MatrixUtils
     }
     
     /**
+     * Set the given matrix to be a translation matrix about the given vector.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param t The translation
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f translation(Tuple3f t, Matrix4f result)
+    {
+        return translation(t.x, t.y, t.z, result);
+    }
+    
+    /**
      * Creates and returns a translation matrix.
      * 
      * @param dx The x-translation
@@ -436,10 +542,28 @@ public class MatrixUtils
      */
     public static Matrix4f translation(double dx, double dy, double dz)
     {
-        Matrix4f result = identity();
-        result.m03 = (float)dx;
-        result.m13 = (float)dy;
-        result.m23 = (float)dz;
+        return translation(dx, dy, dz, new Matrix4f());
+    }
+    
+    /**
+     * Set the given matrix to be a translation matrix about the given vector.
+     * If the given result matrix is <code>null</code>, then a new matrix will 
+     * be created and returned.
+     * 
+     * @param dx The x-translation
+     * @param dy The y-translation
+     * @param dz The z-translation
+     * @param result The matrix that will store the result
+     * @return The result matrix
+     */
+    public static Matrix4f translation(
+        double dx, double dy, double dz, Matrix4f result)
+    {
+        Matrix4f localResult = result == null ? new Matrix4f() : result;
+        localResult.setIdentity();
+        localResult.m03 = (float)dx;
+        localResult.m13 = (float)dy;
+        localResult.m23 = (float)dz;
         return result;
     }
     
