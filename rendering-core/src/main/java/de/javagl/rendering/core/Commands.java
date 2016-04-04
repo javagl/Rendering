@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
 
+import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Point4f;
@@ -55,6 +56,7 @@ import de.javagl.rendering.core.utils.MatrixUtils;
 import de.javagl.rendering.core.view.Camera;
 import de.javagl.rendering.core.view.CameraUtils;
 import de.javagl.rendering.core.view.View;
+
 
 /**
  * Methods for creating commonly used {@link Command} instances
@@ -149,7 +151,9 @@ public class Commands
      */
     public static Command create(Command ...commands)
     {
-        return create(new ArrayList<Command>(Arrays.asList(commands)));
+        Iterable<? extends Command> iterable =
+            new ArrayList<Command>(Arrays.asList(commands));
+        return create(iterable);
     }
 
     /**
@@ -161,7 +165,9 @@ public class Commands
      */
     public static Command create(Collection<? extends Command> commands)
     {
-        return create(new ArrayList<Command>(commands));
+        Iterable<? extends Command> iterable =
+            new ArrayList<Command>(commands);
+        return create(iterable);
     }
     
     
@@ -218,6 +224,172 @@ public class Commands
         });        
     }
     
+    
+    
+    
+    /**
+     * Creates a {@link Command} that sets the view matrix for
+     * the given {@link Program}.  
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     *   
+     * @param program The program
+     * @param viewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @return The new {@link Command}
+     */
+    public static Command setViewMatrix(
+        Program program, String viewMatrixName, View view)
+    {
+        return setMatrix4f(program, viewMatrixName, () ->
+        {
+            Camera camera = view.getCamera();
+            Matrix4f viewMatrix = 
+                CameraUtils.computeViewMatrix(camera);
+            return viewMatrix;
+        });
+    }
+
+    /**
+     * Creates a {@link Command} that sets the model-view matrix for
+     * the given {@link Program}.  
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     * The model matrix is obtained from the given supplier.
+     *   
+     * @param program The program
+     * @param modelViewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @param modelMatrixSupplier The supplier for the model matrix
+     * @return The new {@link Command}
+     */
+    public static Command setModelViewMatrix(
+        Program program, String modelViewMatrixName, View view,
+        Supplier<Matrix4f> modelMatrixSupplier)
+    {
+        return setMatrix4f(program, modelViewMatrixName, () ->
+        {
+            Matrix4f modelMatrix = modelMatrixSupplier.get();
+            Camera camera = view.getCamera();
+            Matrix4f viewMatrix = 
+                CameraUtils.computeViewMatrix(camera);
+            Matrix4f modelviewMatrix = 
+                MatrixUtils.mul(viewMatrix, modelMatrix);
+            return modelviewMatrix;
+        });
+    }
+
+    /**
+     * Creates a {@link Command} that sets the model-view matrix for
+     * the given {@link Program}.  
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     * A copy of the given matrix will be created, so changes in the 
+     * matrix will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setModelViewMatrix(Program, String, View, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     *   
+     * @param program The program
+     * @param modelViewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @param modelMatrix The model matrix
+     * @return The new {@link Command}
+     */
+    public static Command setModelViewMatrix(
+        Program program, String modelViewMatrixName, View view,
+        Matrix4f modelMatrix)
+    {
+        return setModelViewMatrix(program, modelViewMatrixName, view,
+            Suppliers.constantSupplier(new Matrix4f(modelMatrix)));
+    }
+    
+    /**
+     * Creates a {@link Command} that sets the projection matrix for
+     * the given {@link Program}.  
+     * The projection matrix is obtained from the given view by 
+     * calling {@link View#getProjectionMatrix()}.
+     *   
+     * @param program The program
+     * @param viewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @return The new {@link Command}
+     */
+    public static Command setProjectionMatrix(
+        Program program, String viewMatrixName, View view)
+    {
+        return setMatrix4f(program, viewMatrixName, 
+            view::getProjectionMatrix);
+    }
+    
+    
+    /**
+     * Creates a {@link Command} that sets the normal matrix for
+     * the given {@link Program}, as a 4x4 matrix.  
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     * The model matrix is obtained from the given supplier.
+     *   
+     * @param program The program
+     * @param viewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @param modelMatrixSupplier The supplier for the model matrix
+     * @return The new {@link Command}
+     */
+    public static Command setNormalMatrix4f(
+        Program program, String viewMatrixName, View view,
+        Supplier<Matrix4f> modelMatrixSupplier)
+    {
+        return setMatrix4f(program, viewMatrixName, () ->
+        {
+            Matrix4f modelMatrix = modelMatrixSupplier.get();
+            Camera camera = view.getCamera();
+            Matrix4f viewMatrix = 
+                CameraUtils.computeViewMatrix(camera);
+            Matrix4f modelviewMatrix = 
+                MatrixUtils.mul(viewMatrix, modelMatrix);
+            Matrix4f normalMatrix =
+                MatrixUtils.transposed(
+                    MatrixUtils.inverse(modelviewMatrix));
+            return normalMatrix;
+        });
+    }
+
+    /**
+     * Creates a {@link Command} that sets the normal matrix for
+     * the given {@link Program}, as a 3x3 matrix.
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     * The model matrix is obtained from the given supplier.
+     *   
+     * @param program The program
+     * @param viewMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @param modelMatrixSupplier The supplier for the model matrix
+     * @return The new {@link Command}
+     */
+    public static Command setNormalMatrix3f(
+        Program program, String viewMatrixName, View view,
+        Supplier<Matrix4f> modelMatrixSupplier)
+    {
+        return setMatrix3f(program, viewMatrixName, () ->
+        {
+            Matrix4f modelMatrix = modelMatrixSupplier.get();
+            Camera camera = view.getCamera();
+            Matrix4f viewMatrix = 
+                CameraUtils.computeViewMatrix(camera);
+            Matrix4f modelviewMatrix = 
+                MatrixUtils.mul(viewMatrix, modelMatrix);
+            Matrix4f normalMatrix =
+                MatrixUtils.transposed(
+                    MatrixUtils.inverse(modelviewMatrix));
+            Matrix3f normalMatrix3f = new Matrix3f();
+            normalMatrix.getRotationScale(normalMatrix3f);
+            return normalMatrix3f;
+        });
+    }
+
+    
     /**
      * Creates a {@link Command} that sets the default matrices for
      * the given {@link Program}. The default matrices are 
@@ -256,6 +428,7 @@ public class Commands
         return setDefaultMatrices(program, modelMatrixSupplier, view,
             MODEL_MATRIX.getName(),
             VIEW_MATRIX.getName(),
+            null,
             PROJECTION_MATRIX.getName(),
             NORMAL_MATRIX.getName());
     }
@@ -270,7 +443,7 @@ public class Commands
      * matrix will not affect the {@link Command}. In order to create
      * a command where the matrix may be modified externally, use
      * {@link #setDefaultMatrices(Program, Supplier, View, String, String, 
-     * String, String)} with a 
+     * String, String, String)} with a 
      * <code>Supplier</code> that supplies the desired value.
      * 
      * @param program The program
@@ -318,6 +491,7 @@ public class Commands
      * @param view The view
      * @param modelMatrixName The uniform name for the model matrix
      * @param viewMatrixName The uniform name for the view matrix
+     * @param modelViewMatrixName The uniform name for the model-view matrix
      * @param projectionMatrixName The uniform name for the projection matrix
      * @param normalMatrixName The uniform name for the normal matrix
      * @return The new {@link Command}
@@ -328,6 +502,7 @@ public class Commands
         View view, 
         String modelMatrixName, 
         String viewMatrixName, 
+        String modelViewMatrixName,
         String projectionMatrixName, 
         String normalMatrixName)
     {
@@ -359,6 +534,11 @@ public class Commands
                     renderer.getProgramHandler().setMatrix4f(
                         program, viewMatrixName, viewMatrix);
                 }
+                if (modelViewMatrixName != null)
+                {
+                    renderer.getProgramHandler().setMatrix4f(
+                        program, modelViewMatrixName, modelviewMatrix);
+                }
                 if (projectionMatrixName != null)
                 {
                     renderer.getProgramHandler().setMatrix4f(
@@ -385,13 +565,13 @@ public class Commands
     /**
      * Set the default input matrices for the given program as in
      * {@link #setDefaultMatrices(Program, Supplier, View, String, String, 
-     * String, String)}, using a constant model matrix.<br>
+     * String, String, String)}, using a constant model matrix.<br>
      * <br>
      * A copy of the given matrix will be created, so changes in the 
      * matrix will not affect the {@link Command}. In order to create
      * a command where the matrix may be modified externally, use
      * {@link #setDefaultMatrices(Program, Supplier, View, String, String, 
-     * String, String)} with a 
+     * String, String, String)} with a 
      * <code>Supplier</code> that supplies the desired value.<br>
      * <br>
      * If any of the given uniform names is <code>null</code>, then the
@@ -402,6 +582,7 @@ public class Commands
      * @param view The view
      * @param modelMatrixName The uniform name for the model matrix
      * @param viewMatrixName The uniform name for the view matrix
+     * @param modelViewMatrixName The uniform name for the model-view matrix
      * @param projectionMatrixName The uniform name for the projection matrix
      * @param normalMatrixName The uniform name for the normal matrix
      * @return The new {@link Command}
@@ -412,14 +593,18 @@ public class Commands
         View view, 
         String modelMatrixName, 
         String viewMatrixName, 
+        String modelViewMatrixName, 
         String projectionMatrixName, 
         String normalMatrixName)
     {
         return setDefaultMatrices(program, 
             Suppliers.constantSupplier(new Matrix4f(modelMatrix)), view,
-            modelMatrixName, viewMatrixName, 
+            modelMatrixName, viewMatrixName, modelViewMatrixName,
             projectionMatrixName, normalMatrixName);
     }
+    
+    
+    
     
     /**
      * Creates a new {@link Command} that sets the specified uniform 
@@ -534,6 +719,121 @@ public class Commands
         });
     }
 
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform 
+     * variable for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given matrix will be created, so changes in the 
+     * matrix will not affect the {@link Command}. In order to create
+     * a command where the matrix may be modified externally, use
+     * {@link #setMatrix3f(Program, Parameter, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program}
+     * @param parameter The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType MATRIX3F}  
+     */
+    public static Command setMatrix3f(
+        Program program, Parameter parameter, Matrix3f value)
+    {
+        if (parameter.getType() != ParameterType.MATRIX3F)
+        {
+            throw new IllegalArgumentException(
+                "Type of paramter must be "+ParameterType.MATRIX3F+
+                " but is "+parameter.getType());
+        }
+        return setMatrix3f(program, parameter.getName(), 
+            Suppliers.constantSupplier(new Matrix3f(value)));
+    }
+
+    /**
+     * Creates a new {@link Command} that sets the specified uniform 
+     * variable for the given {@link Program} to the value that is 
+     * obtained from the given supplier
+     * 
+     * @param program The {@link Program}
+     * @param parameter The name of the uniform
+     * @param supplier The supplier of the value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType MATRIX3F}  
+     */
+    public static Command setMatrix3f(
+        Program program, Parameter parameter, Supplier<Matrix3f> supplier)
+    {
+        if (parameter.getType() != ParameterType.MATRIX3F)
+        {
+            throw new IllegalArgumentException(
+                "Type of paramter must be "+ParameterType.MATRIX3F+
+                " but is "+parameter.getType());
+        }
+        return setMatrix3f(program, parameter.getName(), supplier);
+    }
+    
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform 
+     * variable for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given matrix will be created, so changes in the 
+     * matrix will not affect the {@link Command}. In order to create
+     * a command where the matrix may be modified externally, use
+     * {@link #setMatrix3f(Program, String, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program}
+     * @param uniformName The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     */
+    public static Command setMatrix3f(
+        Program program, String uniformName, Matrix3f value)
+    {
+        return setMatrix3f(program, uniformName, 
+            Suppliers.constantSupplier(new Matrix3f(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is obtained from 
+     * the given supplier
+     * 
+     * @param program The {@link Program}
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setMatrix3f(
+        Program program, String uniformName, 
+        Supplier<Matrix3f> supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setMatrix3f(
+                    program, uniformName, supplier.get());
+            }
+            
+            @Override
+            public String toString()
+            {
+                return "setMatrix3f(" + 
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.get()+")";
+            }
+            
+        });
+    }
+    
+    
     /**
      * Creates a new {@link Command} that sets the specified {@link Parameter}
      * for the given {@link Program}.<br>
