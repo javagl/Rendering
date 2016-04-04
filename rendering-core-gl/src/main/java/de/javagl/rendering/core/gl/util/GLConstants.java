@@ -92,6 +92,78 @@ public class GLConstants
     
     
     /**
+     * The GL_FLOAT_VEC2 constant
+     */
+    public static final int GL_FLOAT_VEC2 = 35664;
+
+    /**
+     * The GL_FLOAT_VEC3 constant
+     */
+    public static final int GL_FLOAT_VEC3 = 35665;
+
+    /**
+     * The GL_FLOAT_VEC4 constant
+     */
+    public static final int GL_FLOAT_VEC4 = 35666;
+
+    /**
+     * The GL_INT_VEC2 constant
+     */
+    public static final int GL_INT_VEC2 = 35667;
+
+    /**
+     * The GL_INT_VEC3 constant
+     */
+    public static final int GL_INT_VEC3 = 35668;
+
+    /**
+     * The GL_INT_VEC4 constant
+     */
+    public static final int GL_INT_VEC4 = 35669;
+
+    /**
+     * The GL_BOOL constant
+     */
+    public static final int GL_BOOL = 35670;
+
+    /**
+     * The GL_BOOL_VEC2 constant
+     */
+    public static final int GL_BOOL_VEC2 = 35671;
+
+    /**
+     * The GL_BOOL_VEC3 constant
+     */
+    public static final int GL_BOOL_VEC3 = 35672;
+
+    /**
+     * The GL_BOOL_VEC4 constant
+     */
+    public static final int GL_BOOL_VEC4 = 35673;
+
+    /**
+     * The GL_FLOAT_MAT2 constant
+     */
+    public static final int GL_FLOAT_MAT2 = 35674;
+
+    /**
+     * The GL_FLOAT_MAT3 constant
+     */
+    public static final int GL_FLOAT_MAT3 = 35675;
+
+    /**
+     * The GL_FLOAT_MAT4 constant
+     */
+    public static final int GL_FLOAT_MAT4 = 35676;
+
+    /**
+     * The GL_SAMPLER_2D constant
+     */
+    public static final int GL_SAMPLER_2D = 35678;    
+    
+    
+    
+    /**
      * The GL_POINTS constant
      */
     public static final int GL_POINTS = 0;
@@ -149,6 +221,21 @@ public class GLConstants
             case GL_INT : return "GL_INT";
             case GL_UNSIGNED_INT : return "GL_UNSIGNED_INT";
             case GL_FLOAT : return "GL_FLOAT";
+            
+            case GL_FLOAT_VEC2 : return "GL_FLOAT_VEC2";
+            case GL_FLOAT_VEC3 : return "GL_FLOAT_VEC3";
+            case GL_FLOAT_VEC4 : return "GL_FLOAT_VEC4";
+            case GL_INT_VEC2 : return "GL_INT_VEC2";
+            case GL_INT_VEC3 : return "GL_INT_VEC3";
+            case GL_INT_VEC4 : return "GL_INT_VEC4";
+            case GL_BOOL : return "GL_BOOL";
+            case GL_BOOL_VEC2 : return "GL_BOOL_VEC2";
+            case GL_BOOL_VEC3 : return "GL_BOOL_VEC3";
+            case GL_BOOL_VEC4 : return "GL_BOOL_VEC4";
+            case GL_FLOAT_MAT2 : return "GL_FLOAT_MAT2";
+            case GL_FLOAT_MAT3 : return "GL_FLOAT_MAT3";
+            case GL_FLOAT_MAT4 : return "GL_FLOAT_MAT4";
+            case GL_SAMPLER_2D : return "GL_SAMPLER_2D";
             
             case GL_POINTS: return "GL_POINTS";
             case GL_LINES: return "GL_LINES";
