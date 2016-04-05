@@ -331,16 +331,16 @@ public class Commands
      * The model matrix is obtained from the given supplier.
      *   
      * @param program The program
-     * @param viewMatrixName The uniform name for the matrix
+     * @param normalMatrixName The uniform name for the matrix
      * @param view The {@link View}
      * @param modelMatrixSupplier The supplier for the model matrix
      * @return The new {@link Command}
      */
     public static Command setNormalMatrix4f(
-        Program program, String viewMatrixName, View view,
+        Program program, String normalMatrixName, View view,
         Supplier<Matrix4f> modelMatrixSupplier)
     {
-        return setMatrix4f(program, viewMatrixName, () ->
+        return setMatrix4f(program, normalMatrixName, () ->
         {
             Matrix4f modelMatrix = modelMatrixSupplier.get();
             Camera camera = view.getCamera();
@@ -363,16 +363,16 @@ public class Commands
      * The model matrix is obtained from the given supplier.
      *   
      * @param program The program
-     * @param viewMatrixName The uniform name for the matrix
+     * @param normalMatrixName The uniform name for the matrix
      * @param view The {@link View}
      * @param modelMatrixSupplier The supplier for the model matrix
      * @return The new {@link Command}
      */
     public static Command setNormalMatrix3f(
-        Program program, String viewMatrixName, View view,
+        Program program, String normalMatrixName, View view,
         Supplier<Matrix4f> modelMatrixSupplier)
     {
-        return setMatrix3f(program, viewMatrixName, () ->
+        return setMatrix3f(program, normalMatrixName, () ->
         {
             Matrix4f modelMatrix = modelMatrixSupplier.get();
             Camera camera = view.getCamera();
@@ -389,6 +389,32 @@ public class Commands
         });
     }
 
+    /**
+     * Creates a {@link Command} that sets the normal matrix for
+     * the given {@link Program}, as a 3x3 matrix.
+     * The view matrix is computed from the {@link Camera} of the given 
+     * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
+     * The model matrix is obtained from the given supplier.
+     * A copy of the given matrix will be created, so changes in the 
+     * matrix will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setModelViewMatrix(Program, String, View, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     *   
+     * @param program The program
+     * @param normalMatrixName The uniform name for the matrix
+     * @param view The {@link View}
+     * @param modelMatrix The the model matrix
+     * @return The new {@link Command}
+     */
+    public static Command setNormalMatrix3f(
+        Program program, String normalMatrixName, View view,
+        Matrix4f modelMatrix)
+    {
+        return setNormalMatrix3f(program, normalMatrixName, view,
+            Suppliers.constantSupplier(new Matrix4f(modelMatrix)));
+    }
+    
     
     /**
      * Creates a {@link Command} that sets the default matrices for
@@ -485,6 +511,10 @@ public class Commands
      * </ul>  
      * If any of the given uniform names is <code>null</code>, then the
      * corresponding matrix will not be set.
+     * <br>
+     * Note: This assumes that the normal matrix will be passed to
+     * the program as a 4x4 matrix. In order to set a 3x3 normal
+     * matrix, use {@link #setNormalMatrix3f(Program, String, View, Supplier)}.
      *   
      * @param program The program
      * @param modelMatrixSupplier The supplier of the model matrix
