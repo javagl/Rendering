@@ -26,12 +26,17 @@
  */
 
 package de.javagl.rendering.core.jogl;
+import static com.jogamp.opengl.GL.GL_TRUE;
+import static com.jogamp.opengl.GL2ES2.GL_COMPILE_STATUS;
 import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
+import static com.jogamp.opengl.GL2ES2.GL_VALIDATE_STATUS;
 import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-
-import com.jogamp.opengl.GL3;
+import java.nio.IntBuffer;
+import java.nio.charset.Charset;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -42,6 +47,8 @@ import javax.vecmath.Tuple3i;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Tuple4i;
 
+import com.jogamp.opengl.GL3;
+
 import de.javagl.rendering.core.Program;
 import de.javagl.rendering.core.Shader;
 import de.javagl.rendering.core.ShaderType;
@@ -51,6 +58,7 @@ import de.javagl.rendering.core.gl.GLProgram;
 import de.javagl.rendering.core.gl.util.ErrorHandler;
 import de.javagl.rendering.core.handling.AbstractProgramHandler;
 import de.javagl.rendering.core.handling.ProgramHandler;
+import de.javagl.rendering.core.handling.RenderedObjectHandler;
 import de.javagl.rendering.core.utils.BufferUtils;
 import de.javagl.rendering.core.utils.MatrixUtils;
 
@@ -103,6 +111,8 @@ class JOGLProgramHandler
     @Override
     public GLProgram handleInternal(Program program)
     {
+        final boolean alwaysPrintLog = true;
+        
         int programID  = gl.glCreateProgram();
         GLProgram glProgram = DefaultGL.createGLProgram(programID);
         
@@ -126,13 +136,25 @@ class JOGLProgramHandler
             gl.glShaderSource(
                 shaderID, 1, new String[]{shader.getSource()}, null);
             gl.glCompileShader(shaderID);     
-            //printShaderLogInfo(shaderID);
+
+            int compileStatus[] = { 0 };
+            gl.glGetShaderiv(shaderID, GL_COMPILE_STATUS, compileStatus, 0);
+            if (compileStatus[0] != GL_TRUE || alwaysPrintLog)
+            {
+                printShaderLogInfo(shaderID);
+            }
             gl.glAttachShader(programID, shaderID);
             gl.glDeleteShader(shaderID);
         }
         gl.glLinkProgram(programID);
         gl.glValidateProgram(programID);
-        //printProgramLogInfo(programID);
+        
+        int validateStatus[] = { 0 };
+        gl.glGetProgramiv(programID, GL_VALIDATE_STATUS, validateStatus, 0);
+        if (validateStatus[0] != GL_TRUE || alwaysPrintLog)
+        {
+            printProgramLogInfo(programID);
+        }
         
         return glProgram;
     }
@@ -358,7 +380,15 @@ class JOGLProgramHandler
     }
     
 
-    
+    /**
+     * Package-private method used by the {@link RenderedObjectHandler} to
+     * obtain the {@link GLAttribute} for an attribute with the given name
+     * in the given program
+     * 
+     * @param program The program
+     * @param name The name
+     * @return The attribute
+     */
     GLAttribute getGLAttribute(Program program, String name)
     {
         int programID = useProgram(program);
@@ -379,31 +409,59 @@ class JOGLProgramHandler
     
     
     
-    
-//    private void printProgramLogInfo(int id) 
-//    {
-//        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asIntBuffer();
-//        gl.glGetProgramiv(id, GL3.GL_INFO_LOG_LENGTH, infoLogLength);
-//
-//        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0)).order(ByteOrder.nativeOrder());
-//        gl.glGetProgramInfoLog(id, infoLogLength.get(0), null, infoLog);
-//
-//        String infoLogString =
-//                Charset.forName("US-ASCII").decode(infoLog).toString();
-//        System.out.println("program Log: "+infoLogString);
-//    }    
-//
-//    private void printShaderLogInfo(int id) 
-//    {
-//        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asIntBuffer();
-//        gl.glGetShaderiv(id, GL3.GL_INFO_LOG_LENGTH, infoLogLength);
-//
-//        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0)).order(ByteOrder.nativeOrder());
-//        gl.glGetShaderInfoLog(id, infoLogLength.get(0), null, infoLog);
-//
-//        String infoLogString =
-//                Charset.forName("US-ASCII").decode(infoLog).toString();
-//        System.out.println("shader Log: "+infoLogString);
-//    }    
+
+    /**
+     * For debugging: Print shader log info
+     * 
+     * @param id shader ID
+     */
+    private void printShaderLogInfo(int id) 
+    {
+        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4)
+            .order(ByteOrder.nativeOrder()).asIntBuffer();
+        gl.glGetShaderiv(id, GL3.GL_INFO_LOG_LENGTH, infoLogLength);
+        if (infoLogLength.get(0) > 0) 
+        {
+            infoLogLength.put(0, infoLogLength.get(0)-1);
+        }
+
+        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0))
+            .order(ByteOrder.nativeOrder());
+        gl.glGetShaderInfoLog(id, infoLogLength.get(0), null, infoLog);
+
+        String infoLogString =
+            Charset.forName("US-ASCII").decode(infoLog).toString();
+        if (infoLogString.trim().length() > 0)
+        {
+            ErrorHandler.handle("shader log:\n"+infoLogString);
+        }
+    }    
+
+    /**
+     * For debugging: Print program log info
+     * 
+     * @param id program ID
+     */
+    private void printProgramLogInfo(int id) 
+    {
+        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4)
+            .order(ByteOrder.nativeOrder()).asIntBuffer();
+        gl.glGetProgramiv(id, GL3.GL_INFO_LOG_LENGTH, infoLogLength);
+        if (infoLogLength.get(0) > 0) 
+        {
+            infoLogLength.put(0, infoLogLength.get(0)-1);
+        }
+
+        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0))
+            .order(ByteOrder.nativeOrder());
+        gl.glGetProgramInfoLog(id, infoLogLength.get(0), null, infoLog);
+
+        String infoLogString = 
+            Charset.forName("US-ASCII").decode(infoLog).toString();
+        if (infoLogString.trim().length() > 0)
+        {
+            ErrorHandler.handle("program log:\n"+infoLogString);
+        }
+    }    
     
 }

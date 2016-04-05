@@ -112,7 +112,7 @@ public class RenderingEnvironments
             Throwable t = failures.get(f);
             if (t == null)
             {
-                sb.append("Factory "+f+" did not create a non-null instance");
+                sb.append("Factory "+f+" did not create a non-null instance\n");
             }
             else
             {

@@ -26,9 +26,13 @@
  */
 
 package de.javagl.rendering.core.lwjgl;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.glGetInteger;
+import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
+import static org.lwjgl.opengl.GL20.GL_INFO_LOG_LENGTH;
+import static org.lwjgl.opengl.GL20.GL_VALIDATE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
 import static org.lwjgl.opengl.GL20.glAttachShader;
 import static org.lwjgl.opengl.GL20.glCompileShader;
@@ -37,6 +41,10 @@ import static org.lwjgl.opengl.GL20.glCreateShader;
 import static org.lwjgl.opengl.GL20.glDeleteProgram;
 import static org.lwjgl.opengl.GL20.glDeleteShader;
 import static org.lwjgl.opengl.GL20.glGetAttribLocation;
+import static org.lwjgl.opengl.GL20.glGetProgram;
+import static org.lwjgl.opengl.GL20.glGetProgramInfoLog;
+import static org.lwjgl.opengl.GL20.glGetShader;
+import static org.lwjgl.opengl.GL20.glGetShaderInfoLog;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glLinkProgram;
 import static org.lwjgl.opengl.GL20.glShaderSource;
@@ -54,7 +62,10 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glValidateProgram;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.charset.Charset;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -65,8 +76,6 @@ import javax.vecmath.Tuple3i;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Tuple4i;
 
-import org.lwjgl.opengl.GL20;
-
 import de.javagl.rendering.core.Program;
 import de.javagl.rendering.core.Shader;
 import de.javagl.rendering.core.ShaderType;
@@ -76,6 +85,7 @@ import de.javagl.rendering.core.gl.GLProgram;
 import de.javagl.rendering.core.gl.util.ErrorHandler;
 import de.javagl.rendering.core.handling.AbstractProgramHandler;
 import de.javagl.rendering.core.handling.ProgramHandler;
+import de.javagl.rendering.core.handling.RenderedObjectHandler;
 import de.javagl.rendering.core.utils.BufferUtils;
 import de.javagl.rendering.core.utils.MatrixUtils;
 
@@ -117,18 +127,12 @@ class LWJGLProgramHandler
         //instance = this;
     }
 
-    private static void printLogInfo(int id)
-    {
-        String log = GL20.glGetProgramInfoLog(id, 40000);
-        if (log.trim().length() > 0)
-        {
-            System.out.println("LOG: "+log);
-        }
-    }
     
     @Override
     public GLProgram handleInternal(Program program)
     {
+        final boolean alwaysPrintLog = true;
+        
         int programID  = glCreateProgram();
         GLProgram glProgram = DefaultGL.createGLProgram(programID);
         for (Shader shader : program.getShaders())
@@ -151,15 +155,23 @@ class LWJGLProgramHandler
                 BufferUtils.toByteBuffer(shader.getSource());
             glShaderSource(shaderID, sourceBuffer);
             glCompileShader(shaderID);     
-            printLogInfo(shaderID);
+            
+            int compileStatus = glGetShader(shaderID, GL_COMPILE_STATUS);
+            if (compileStatus != GL_TRUE || alwaysPrintLog)
+            {
+                printShaderLogInfo(shaderID);
+            }
             glAttachShader(programID, shaderID);
             glDeleteShader(shaderID);
         }
         
         glLinkProgram(programID);
-        printLogInfo(programID);
         glValidateProgram(programID);
-        printLogInfo(programID);
+        int validateStatus = glGetProgram(programID, GL_VALIDATE_STATUS);
+        if (validateStatus != GL_TRUE || alwaysPrintLog)
+        {
+            printProgramLogInfo(programID);
+        }
         
         return glProgram;
     }
@@ -219,7 +231,7 @@ class LWJGLProgramHandler
      * be considered as an error), but may also be -1 when the uniform 
      * is only not USED - which is no error
      */
-    private static final boolean REPORT_INVALID_LOCATIONS = true;
+    private static final boolean REPORT_INVALID_LOCATIONS = false;
     private void locationInvalid(Program program, String name)
     {
         if (REPORT_INVALID_LOCATIONS)
@@ -440,7 +452,15 @@ class LWJGLProgramHandler
     }
     
     
-    
+    /**
+     * Package-private method used by the {@link RenderedObjectHandler} to
+     * obtain the {@link GLAttribute} for an attribute with the given name
+     * in the given program
+     * 
+     * @param program The program
+     * @param name The name
+     * @return The attribute
+     */
     GLAttribute getGLAttribute(Program program, String name)
     {
         int programID = useProgram(program);
@@ -461,6 +481,63 @@ class LWJGLProgramHandler
         restoreProgram();
         return glAttribute;
     }
+
+    
+    
+    /**
+     * For debugging: Print shader log info
+     * 
+     * @param id shader ID
+     */
+    private void printShaderLogInfo(int id) 
+    {
+        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4)
+            .order(ByteOrder.nativeOrder()).asIntBuffer();
+        glGetShader(id, GL_INFO_LOG_LENGTH, infoLogLength);
+        if (infoLogLength.get(0) > 0) 
+        {
+            infoLogLength.put(0, infoLogLength.get(0)-1);
+        }
+
+        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0))
+            .order(ByteOrder.nativeOrder());
+        glGetShaderInfoLog(id, infoLogLength, infoLog);
+
+        String infoLogString =
+            Charset.forName("US-ASCII").decode(infoLog).toString();
+        if (infoLogString.trim().length() > 0)
+        {
+            ErrorHandler.handle("shader log:\n"+infoLogString);
+        }
+    }    
+
+    /**
+     * For debugging: Print program log info
+     * 
+     * @param id program ID
+     */
+    private void printProgramLogInfo(int id) 
+    {
+        IntBuffer infoLogLength = ByteBuffer.allocateDirect(4)
+            .order(ByteOrder.nativeOrder()).asIntBuffer();
+        glGetProgram(id, GL_INFO_LOG_LENGTH, infoLogLength);
+        if (infoLogLength.get(0) > 0) 
+        {
+            infoLogLength.put(0, infoLogLength.get(0)-1);
+        }
+
+        ByteBuffer infoLog = ByteBuffer.allocateDirect(infoLogLength.get(0))
+            .order(ByteOrder.nativeOrder());
+        glGetProgramInfoLog(id, infoLogLength, infoLog);
+
+        String infoLogString = 
+            Charset.forName("US-ASCII").decode(infoLog).toString();
+        if (infoLogString.trim().length() > 0)
+        {
+            ErrorHandler.handle("program log:\n"+infoLogString);
+        }
+    }    
+    
     
     
     //========================================================================

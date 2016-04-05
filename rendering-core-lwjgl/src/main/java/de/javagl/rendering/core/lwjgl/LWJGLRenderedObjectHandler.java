@@ -136,8 +136,6 @@ class LWJGLRenderedObjectHandler
                     continue;
                 }
                 
-                System.out.println("Attribute "+attribute+" mapped to "+programParameter+" with location "+glAttribute.getLocation());
-
                 GLDataBuffer glDataBuffer = 
                     glGraphicsObject.getGLDataBuffer(attribute);
                 if (glDataBuffer == null)
