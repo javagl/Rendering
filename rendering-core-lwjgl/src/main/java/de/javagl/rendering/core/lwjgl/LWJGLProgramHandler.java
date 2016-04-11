@@ -119,6 +119,13 @@ class LWJGLProgramHandler
         new LinkedHashMap<Program, Map<String, Runnable>>();
     
     /**
+     * A map from {@link Program} instances to the maps containing 
+     * the uniform locations for each uniform name
+     */
+    private final Map<Program, Map<String, Integer>> uniformLocations =
+        new LinkedHashMap<Program, Map<String,Integer>>();
+    
+    /**
      * Creates a new LWJGLProgramHandler
      */
     LWJGLProgramHandler()
@@ -179,6 +186,7 @@ class LWJGLProgramHandler
     {
         glDeleteProgram(glProgram.getProgram());
         pendingSetters.remove(program);
+        uniformLocations.remove(program);
     }
     
     
@@ -218,6 +226,42 @@ class LWJGLProgramHandler
     }
     
     /**
+     * Returns the uniform location for the uniform with the given name
+     * in the given program.
+     * 
+     * @param program The {@link Program}
+     * @param name The uniform name
+     * @return The uniform location
+     */
+    private int getUniformLocation(Program program, String name)
+    {
+        Map<String, Integer> locations = uniformLocations.computeIfAbsent(
+            program, p -> new LinkedHashMap<String, Integer>());
+        Integer location = locations.get(name);
+        if (location != null)
+        {
+            return location;
+        }
+        GLProgram glProgram = getInternal(program);
+        if (glProgram == null)
+        {
+            ErrorHandler.handle("GL Program not found for "+program);
+            location = -1;
+        }
+        else
+        {
+            int programID = glProgram.getProgram();
+            location = glGetUniformLocation(programID, name);
+            if (location == -1)
+            {
+                locationInvalid(program, name);
+            }
+            locations.put(name, location);
+        }
+        return location;
+    }
+    
+    /**
      * Create a setter for the uniform with the given name in the given
      * program. This setter will be executed when {@link #executeSetters}
      * is called.
@@ -234,24 +278,8 @@ class LWJGLProgramHandler
             program, p -> new LinkedHashMap<String, Runnable>());
         Runnable setter = () ->
         {
-            GLProgram glProgram = getInternal(program);
-            if (glProgram == null)
-            {
-                ErrorHandler.handle("GL Program not found for "+program);
-            }
-            else
-            {
-                int programID = glProgram.getProgram();
-                int location = glGetUniformLocation(programID, name);
-                if (location != -1)
-                {
-                    glSetter.accept(location);
-                }
-                else
-                {
-                    locationInvalid(program, name);
-                }
-            }
+            int location = getUniformLocation(program, name);
+            glSetter.accept(location);
         };
         setters.put(name, setter);
     }
