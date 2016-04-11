@@ -79,14 +79,9 @@ import de.javagl.rendering.core.view.View;
 class ArcballCameraBehavior 
 {
     /**
-     * A factor to compute the movement from a mouse movement
-     */
-    private static final float MOVEMENT_SPEED = 0.005f;
-
-    /**
      * A factor to compute the zoom from a mouse rotation
      */
-    private final float ZOOMING_SPEED = 0.1f;
+    private static final float ZOOMING_SPEED = 0.1f;
     
     /**
      * The view this behavior operates on
@@ -317,7 +312,15 @@ class ArcballCameraBehavior
         Vector3f delta = new Vector3f();
         delta.x = previousPosition.x - point.x;
         delta.y = point.y - previousPosition.y;
-        delta.scale(MOVEMENT_SPEED);
+        
+        Rectangle viewport = view.getViewport();
+        delta.x /= viewport.getWidth();
+        delta.y /= viewport.getHeight();
+        
+        Point3f currentEyePoint = camera.getEyePoint();
+        Point3f currentViewPoint = camera.getViewPoint();
+        float viewToEyeDistance = currentViewPoint.distance(currentEyePoint);
+        delta.scale(viewToEyeDistance);
 
         Matrix4f currentMatrix = new Matrix4f();
         currentMatrix.setIdentity();
