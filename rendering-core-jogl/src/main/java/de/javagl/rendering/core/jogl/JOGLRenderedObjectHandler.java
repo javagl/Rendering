@@ -238,9 +238,8 @@ class JOGLRenderedObjectHandler
             return;
         }
         GLProgram glProgram = glRenderedObject.getGLProgram();
-        GLGraphicsObject glGraphicsObject = 
-            glRenderedObject.getGLGraphicsObject();
-
+        gl.glUseProgram(glProgram.getProgram());
+        
         // The current GL_TEXTUREn-index
         int currentTextureIndex = 0;
         Mapping<Parameter, Texture> textureMapping = 
@@ -261,8 +260,11 @@ class JOGLRenderedObjectHandler
             }
         }
         
+        programHandler.executeSetters(program);
+        
+        GLGraphicsObject glGraphicsObject = 
+            glRenderedObject.getGLGraphicsObject();
         GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer(); 
-        gl.glUseProgram(glProgram.getProgram());
         gl.glBindVertexArray(glRenderedObject.getVertexArrayObject());
         gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
         gl.glDrawElements(

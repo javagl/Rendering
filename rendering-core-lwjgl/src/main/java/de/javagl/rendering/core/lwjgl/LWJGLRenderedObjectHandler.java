@@ -212,8 +212,7 @@ class LWJGLRenderedObjectHandler
             return;
         }
         GLProgram glProgram = glRenderedObject.getGLProgram();
-        GLGraphicsObject glGraphicsObject = 
-            glRenderedObject.getGLGraphicsObject();
+        glUseProgram(glProgram.getProgram());
 
         Mapping<Parameter, Texture> textureMapping = 
             renderedObject.getTextureMapping();
@@ -235,8 +234,12 @@ class LWJGLRenderedObjectHandler
                 ErrorHandler.handle("GLTexture not found for "+texture);
             }
         }
+        
+        programHandler.executeSetters(program);
+        
+        GLGraphicsObject glGraphicsObject = 
+            glRenderedObject.getGLGraphicsObject();
         GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer();
-        glUseProgram(glProgram.getProgram());
         glBindVertexArray(glRenderedObject.getVertexArrayObject());
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
         glDrawElements(

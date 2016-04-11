@@ -26,10 +26,9 @@
  */
 
 package de.javagl.rendering.core.lwjgl;
+
 import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
-import static org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
 import static org.lwjgl.opengl.GL20.GL_INFO_LOG_LENGTH;
 import static org.lwjgl.opengl.GL20.GL_VALIDATE_STATUS;
@@ -58,7 +57,6 @@ import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniform4i;
 import static org.lwjgl.opengl.GL20.glUniformMatrix3;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4;
-import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glValidateProgram;
 
 import java.nio.ByteBuffer;
@@ -66,6 +64,9 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.IntConsumer;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -85,7 +86,6 @@ import de.javagl.rendering.core.gl.GLProgram;
 import de.javagl.rendering.core.gl.util.ErrorHandler;
 import de.javagl.rendering.core.handling.AbstractProgramHandler;
 import de.javagl.rendering.core.handling.ProgramHandler;
-import de.javagl.rendering.core.handling.RenderedObjectHandler;
 import de.javagl.rendering.core.utils.BufferUtils;
 import de.javagl.rendering.core.utils.MatrixUtils;
 
@@ -110,14 +110,13 @@ class LWJGLProgramHandler
         BufferUtils.createFloatBuffer(16);
 
     /**
-     * Temporary storage for a program ID
+     * A map from {@link Program} instances to the runnables that have
+     * to be executed in order to update the uniforms of the given 
+     * program. The values of this map are maps that map uniform 
+     * names to the runnables that update the respective uniform. 
      */
-    private int tempPreviousProgram;
-    
-    /**
-     * The current program, stored temporarily for setting uniforms
-     */
-    private int tempCurrentProgram;
+    private final Map<Program, Map<String, Runnable>> pendingSetters = 
+        new LinkedHashMap<Program, Map<String, Runnable>>();
     
     /**
      * Creates a new LWJGLProgramHandler
@@ -172,7 +171,6 @@ class LWJGLProgramHandler
         {
             printProgramLogInfo(programID);
         }
-        
         return glProgram;
     }
 
@@ -180,47 +178,26 @@ class LWJGLProgramHandler
     public void releaseInternal(Program program, GLProgram glProgram)
     {
         glDeleteProgram(glProgram.getProgram());
+        pendingSetters.remove(program);
     }
-
+    
     
     /**
-     * Temporarily activate the given {@link Program}. Returns the GL 
-     * program ID, or -1 if the program can not be found. 
-     * 
-     * This will store the GL program ID as the 'tempCurrentProgram' and
-     * the program that was activated before this call in the
-     * 'tempPreviousProgram'. A call to restoreProgram will restore
-     * this previously activated program.
+     * Package-private method used by the {@link LWJGLRenderedObjectHandler}
+     * to update the state of the given program, after it has been activated
+     * with <code>glUseProgram</code>. This will execute all
+     * {@link #pendingSetters} for the program, and remove them from
+     * the map.
      *  
-     * @param program The program
-     * @return The program ID
+     * @param program The program.
      */
-    private int useProgram(Program program)
+    void executeSetters(Program program)
     {
-        GLProgram glProgram = getInternal(program);
-        if (glProgram == null)
+        Map<String, Runnable> setters = pendingSetters.get(program);
+        if (setters != null)
         {
-            ErrorHandler.handle("GL Program not found for "+program);
-            return -1;
-        }
-        tempPreviousProgram = glGetInteger(GL_CURRENT_PROGRAM);
-        tempCurrentProgram = glProgram.getProgram();
-        if (tempPreviousProgram != tempCurrentProgram)
-        {
-            glUseProgram(tempCurrentProgram);
-        }
-        return tempCurrentProgram;
-    }
-    
-    /**
-     * Restore the program that is stored in the tempPreviousProgram.
-     * See {@link #useProgram(Program)}.
-     */
-    private void restoreProgram()
-    {
-        if (tempPreviousProgram != tempCurrentProgram)
-        {
-            glUseProgram(tempPreviousProgram);
+            setters.values().forEach(r -> r.run());
+            pendingSetters.remove(program);
         }
     }
     
@@ -240,222 +217,171 @@ class LWJGLProgramHandler
         }
     }
     
+    /**
+     * Create a setter for the uniform with the given name in the given
+     * program. This setter will be executed when {@link #executeSetters}
+     * is called.
+     * 
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param glSetter The actual setter that receives the uniform 
+     * location, and calls the <code>glUniform*</code> method.
+     */
+    private void createSetter(
+        Program program, String name, IntConsumer glSetter)
+    {
+        Map<String, Runnable> setters = pendingSetters.computeIfAbsent(
+            program, p -> new LinkedHashMap<String, Runnable>());
+        Runnable setter = () ->
+        {
+            GLProgram glProgram = getInternal(program);
+            if (glProgram == null)
+            {
+                ErrorHandler.handle("GL Program not found for "+program);
+            }
+            else
+            {
+                int programID = glProgram.getProgram();
+                int location = glGetUniformLocation(programID, name);
+                if (location != -1)
+                {
+                    glSetter.accept(location);
+                }
+                else
+                {
+                    locationInvalid(program, name);
+                }
+            }
+        };
+        setters.put(name, setter);
+    }
+    
     @Override
     public void setMatrix3f(Program program, String name, Matrix3f value)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        Matrix3f localValue = new Matrix3f(value);
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            MatrixUtils.writeMatrixToBuffer(value, tempMatrix3fBuffer);
+            MatrixUtils.writeMatrixToBuffer(localValue, tempMatrix3fBuffer);
             glUniformMatrix3(location, false, tempMatrix3fBuffer);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+        });
     }
 
 
     @Override
     public void setMatrix4f(Program program, String name, Matrix4f value)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        Matrix4f localValue = new Matrix4f(value);
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            MatrixUtils.writeMatrixToBuffer(value, tempMatrix4fBuffer);
+            MatrixUtils.writeMatrixToBuffer(localValue, tempMatrix4fBuffer);
             glUniformMatrix4(location, false, tempMatrix4fBuffer);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+        });
     }
     
     @Override
     public void setFloat(Program program, String name, float value)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
-        {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
+        createSetter(program, name, location ->
         {
             glUniform1f(location, value);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+        });
     }
     
 
     @Override
     public void setTuple2f(Program program, String name, Tuple2f tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        float x = tuple.x;
+        float y = tuple.y;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            glUniform2f(location, tuple.x, tuple.y);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform2f(location, x, y);
+        });
     }
     
     
     @Override
     public void setTuple3f(Program program, String name, Tuple3f tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        float x = tuple.x;
+        float y = tuple.y;
+        float z = tuple.z;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            glUniform3f(location, tuple.x, tuple.y, tuple.z);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform3f(location, x, y, z);
+        });
     }
     
     
     @Override
     public void setTuple4f(Program program, String name, Tuple4f tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        float x = tuple.x;
+        float y = tuple.y;
+        float z = tuple.z;
+        float w = tuple.w;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        //System.out.println("Location of "+name+" is "+location);
-        if (location != -1)
-        {
-            glUniform4f(location, tuple.x, tuple.y, tuple.z, tuple.w);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform4f(location, x, y, z, w);
+        });
     }
     
     
     @Override
     public void setInt(Program program, String name, int value)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
-        {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
+        createSetter(program, name, location ->
         {
             glUniform1i(location, value);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+        });
     }
     
 
     @Override
     public void setTuple2i(Program program, String name, Tuple2i tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        int x = tuple.x;
+        int y = tuple.y;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            glUniform2i(location, tuple.x, tuple.y);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform2i(location, x, y);
+        });
     }
     
     
     @Override
     public void setTuple3i(Program program, String name, Tuple3i tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        int x = tuple.x;
+        int y = tuple.y;
+        int z = tuple.z;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            glUniform3i(location, tuple.x, tuple.y, tuple.z);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform3i(location, x, y, z);
+        });
     }
     
     
     @Override
     public void setTuple4i(Program program, String name, Tuple4i tuple)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        int x = tuple.x;
+        int y = tuple.y;
+        int z = tuple.z;
+        int w = tuple.w;
+        createSetter(program, name, location ->
         {
-            return;
-        }
-        int location = glGetUniformLocation(programID, name);
-        if (location != -1)
-        {
-            glUniform4i(location, tuple.x, tuple.y, tuple.z, tuple.w);
-        }
-        else
-        {
-            locationInvalid(program, name);
-        }
-        restoreProgram();
+            glUniform4i(location, x, y, z, w);
+        });
     }
     
     
     /**
-     * Package-private method used by the {@link RenderedObjectHandler} to
+     * Package-private method used by the {@link LWJGLRenderedObjectHandler} to
      * obtain the {@link GLAttribute} for an attribute with the given name
-     * in the given program
+     * from the program that is currently active (i.e. which was activated
+     * with <code>glUseProgram</code>).
      * 
      * @param program The program
      * @param name The name
@@ -463,12 +389,14 @@ class LWJGLProgramHandler
      */
     GLAttribute getGLAttribute(Program program, String name)
     {
-        int programID = useProgram(program);
-        if (programID == -1)
+        GLProgram glProgram = getInternal(program);
+        if (glProgram == null)
         {
+            ErrorHandler.handle("GL Program not found for "+program);
             return null;
         }
         GLAttribute glAttribute = null;
+        int programID = glProgram.getProgram();
         int location = glGetAttribLocation(programID, name);
         if (location != -1)
         {
@@ -478,7 +406,6 @@ class LWJGLProgramHandler
         {
             locationInvalid(program, name);
         }
-        restoreProgram();
         return glAttribute;
     }
 
