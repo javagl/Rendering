@@ -286,7 +286,7 @@ public class Commands
      * {@link View} using {@link CameraUtils#computeViewMatrix(Camera)}.
      * A copy of the given matrix will be created, so changes in the 
      * matrix will not affect the {@link Command}. In order to create
-     * a command where the tuple may be modified externally, use
+     * a command where the matrix may be modified externally, use
      * {@link #setModelViewMatrix(Program, String, View, Supplier)} with a 
      * <code>Supplier</code> that supplies the desired value.
      *   
@@ -397,7 +397,7 @@ public class Commands
      * The model matrix is obtained from the given supplier.
      * A copy of the given matrix will be created, so changes in the 
      * matrix will not affect the {@link Command}. In order to create
-     * a command where the tuple may be modified externally, use
+     * a command where the matrix may be modified externally, use
      * {@link #setModelViewMatrix(Program, String, View, Supplier)} with a 
      * <code>Supplier</code> that supplies the desired value.
      *   
