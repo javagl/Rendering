@@ -78,7 +78,10 @@ public class DataLogger
      */
     public static void handling(Object object)
     {
-        logger.log(level, "Handling  "+id(object)+":"+object);
+        if (logger.isLoggable(level))
+        {
+            logger.log(level, "Handling  "+id(object)+":"+object);
+        }
         set.add(object);
         printContents();
     }
@@ -90,7 +93,10 @@ public class DataLogger
      */
     public static void releasing(Object object)
     {
-        logger.log(level, "Releasing "+id(object)+":"+object);
+        if (logger.isLoggable(level))
+        {
+            logger.log(level, "Releasing "+id(object)+":"+object);
+        }
         set.remove(object);
         printContents();
     }
@@ -100,10 +106,13 @@ public class DataLogger
      */
     private static void printContents()
     {
-        logger.log(level, "Contents:");
-        for (Object object : set)
+        if (logger.isLoggable(level))
         {
-            logger.log(level, "    "+id(object)+":"+object);
+            logger.log(level, "Contents:");
+            for (Object object : set)
+            {
+                logger.log(level, "    "+id(object)+":"+object);
+            }
         }
     }
     
