@@ -36,14 +36,26 @@ import static de.javagl.rendering.core.Parameters.VIEW_MATRIX;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
+import javax.vecmath.Point2f;
+import javax.vecmath.Point2i;
 import javax.vecmath.Point3f;
+import javax.vecmath.Point3i;
 import javax.vecmath.Point4f;
+import javax.vecmath.Point4i;
+import javax.vecmath.Tuple2f;
+import javax.vecmath.Tuple2i;
 import javax.vecmath.Tuple3f;
+import javax.vecmath.Tuple3i;
 import javax.vecmath.Tuple4f;
+import javax.vecmath.Tuple4i;
 import javax.vecmath.Vector3f;
 
 import de.javagl.rendering.core.Parameters.LightParameters;
@@ -63,6 +75,17 @@ import de.javagl.rendering.core.view.View;
  */
 public class Commands
 {
+    /**
+     * The logger used in this class
+     */
+    private static final Logger logger = 
+        Logger.getLogger(Commands.class.toString());
+    
+    /**
+     * The log level for {@link #tracing(Command)}
+     */
+    private static final Level traceLogLevel = Level.INFO;
+    
     /**
      * Compile-time flag which indicates whether the stack
      * traces of commands should be preserved and printed 
@@ -656,12 +679,7 @@ public class Commands
     public static Command setMatrix4f(
         Program program, Parameter parameter, Matrix4f value)
     {
-        if (parameter.getType() != ParameterType.MATRIX4F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.MATRIX4F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.MATRIX4F);
         return setMatrix4f(program, parameter.getName(), 
             Suppliers.constantSupplier(new Matrix4f(value)));
     }
@@ -681,12 +699,7 @@ public class Commands
     public static Command setMatrix4f(
         Program program, Parameter parameter, Supplier<Matrix4f> supplier)
     {
-        if (parameter.getType() != ParameterType.MATRIX4F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.MATRIX4F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.MATRIX4F);
         return setMatrix4f(program, parameter.getName(), supplier);
     }
     
@@ -770,12 +783,7 @@ public class Commands
     public static Command setMatrix3f(
         Program program, Parameter parameter, Matrix3f value)
     {
-        if (parameter.getType() != ParameterType.MATRIX3F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.MATRIX3F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.MATRIX3F);
         return setMatrix3f(program, parameter.getName(), 
             Suppliers.constantSupplier(new Matrix3f(value)));
     }
@@ -795,12 +803,7 @@ public class Commands
     public static Command setMatrix3f(
         Program program, Parameter parameter, Supplier<Matrix3f> supplier)
     {
-        if (parameter.getType() != ParameterType.MATRIX3F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.MATRIX3F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.MATRIX3F);
         return setMatrix3f(program, parameter.getName(), supplier);
     }
     
@@ -862,6 +865,108 @@ public class Commands
             
         });
     }
+
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple2f(Program, Parameter, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType TUPLE2F}  
+     */
+    public static Command setTuple2f(
+        Program program, Parameter parameter, Tuple2f value)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE2F);
+        return setTuple2f(program, parameter.getName(), 
+            Suppliers.<Tuple2f>constantSupplier(new Point2f(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}  to the value that is obtained from 
+     * the given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier of the value
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType TUPLE2F}  
+     */
+    public static Command setTuple2f(
+        Program program, Parameter parameter, Supplier<Tuple2f> supplier)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE2F);
+        return setTuple2f(program, parameter.getName(), supplier);
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple4f(Program, String, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple2f(
+        Program program, String uniformName, Tuple2f value)
+    {
+        return setTuple2f(program, uniformName, 
+            Suppliers.<Tuple2f>constantSupplier(new Point2f(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is obtained from the
+     * given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple2f(
+        Program program, String uniformName,
+        Supplier<Tuple2f> supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setTuple2f(
+                    program, uniformName, supplier.get());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setTuple2f(" + 
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.get()+")";
+            }
+            
+        });
+    }
     
     
     /**
@@ -884,12 +989,7 @@ public class Commands
     public static Command setTuple3f(
         Program program, Parameter parameter, Tuple3f value)
     {
-        if (parameter.getType() != ParameterType.TUPLE3F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.TUPLE3F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.TUPLE3F);
         return setTuple3f(program, parameter.getName(), 
             Suppliers.<Tuple3f>constantSupplier(new Point3f(value)));
     }
@@ -909,12 +1009,7 @@ public class Commands
     public static Command setTuple3f(
         Program program, Parameter parameter, Supplier<Tuple3f> supplier)
     {
-        if (parameter.getType() != ParameterType.TUPLE3F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.TUPLE3F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.TUPLE3F);
         return setTuple3f(program, parameter.getName(), supplier);
     }
     
@@ -996,12 +1091,7 @@ public class Commands
     public static Command setTuple4f(
         Program program, Parameter parameter, Tuple4f value)
     {
-        if (parameter.getType() != ParameterType.TUPLE4F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.TUPLE4F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.TUPLE4F);
         return setTuple4f(program, parameter.getName(), 
             Suppliers.<Tuple4f>constantSupplier(new Point4f(value)));
     }
@@ -1021,12 +1111,7 @@ public class Commands
     public static Command setTuple4f(
         Program program, Parameter parameter, Supplier<Tuple4f> supplier)
     {
-        if (parameter.getType() != ParameterType.TUPLE4F)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.TUPLE4F+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.TUPLE4F);
         return setTuple4f(program, parameter.getName(), supplier);
     }
     
@@ -1088,6 +1173,317 @@ public class Commands
         });
     }
 
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple2i(Program, Parameter, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple2i}  
+     */
+    public static Command setTuple2i(
+        Program program, Parameter parameter, Tuple2i value)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE2I);
+        return setTuple2i(program, parameter.getName(), 
+            Suppliers.<Tuple2i>constantSupplier(new Point2i(value)));
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}  to the value that is obtained from 
+     * the given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier of the value
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple2i}  
+     */
+    public static Command setTuple2i(
+        Program program, Parameter parameter, Supplier<Tuple2i> supplier)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE2I);
+        return setTuple2i(program, parameter.getName(), supplier);
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple4i(Program, String, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple2i(
+        Program program, String uniformName, Tuple2i value)
+    {
+        return setTuple2i(program, uniformName, 
+            Suppliers.<Tuple2i>constantSupplier(new Point2i(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is obtained from the
+     * given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple2i(
+        Program program, String uniformName,
+        Supplier<Tuple2i> supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setTuple2i(
+                    program, uniformName, supplier.get());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setTuple2i(" + 
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.get()+")";
+            }
+            
+        });
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple3i(Program, Parameter, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple3i}  
+     */
+    public static Command setTuple3i(
+        Program program, Parameter parameter, Tuple3i value)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE3I);
+        return setTuple3i(program, parameter.getName(), 
+            Suppliers.<Tuple3i>constantSupplier(new Point3i(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}  to the value that is obtained from 
+     * the given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier of the value
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple3i}  
+     */
+    public static Command setTuple3i(
+        Program program, Parameter parameter, Supplier<Tuple3i> supplier)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE3I);
+        return setTuple3i(program, parameter.getName(), supplier);
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple4i(Program, String, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple3i(
+        Program program, String uniformName, Tuple3i value)
+    {
+        return setTuple3i(program, uniformName, 
+            Suppliers.<Tuple3i>constantSupplier(new Point3i(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is obtained from the
+     * given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple3i(
+        Program program, String uniformName,
+        Supplier<Tuple3i> supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setTuple3i(
+                    program, uniformName, supplier.get());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setTuple3i(" + 
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.get()+")";
+            }
+            
+        });
+    }
+
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple4i(Program, Parameter, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple4i}  
+     */
+    public static Command setTuple4i(
+        Program program, Parameter parameter, Tuple4i value)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE4I);
+        return setTuple4i(program, parameter.getName(), 
+            Suppliers.<Tuple4i>constantSupplier(new Point4i(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified {@link Parameter}
+     * for the given {@link Program}  to the value that is obtained from 
+     * the given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier of the value
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType Tuple4i}  
+     */
+    public static Command setTuple4i(
+        Program program, Parameter parameter, Supplier<Tuple4i> supplier)
+    {
+        checkParameterType(parameter, ParameterType.TUPLE4I);
+        return setTuple4i(program, parameter.getName(), supplier);
+    }
+    
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program}.<br>
+     * <br>
+     * A copy of the given tuple will be created, so changes in the 
+     * tuple will not affect the {@link Command}. In order to create
+     * a command where the tuple may be modified externally, use
+     * {@link #setTuple4i(Program, String, Supplier)} with a 
+     * <code>Supplier</code> that supplies the desired value.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param value The value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple4i(
+        Program program, String uniformName, Tuple4i value)
+    {
+        return setTuple4i(program, uniformName, 
+            Suppliers.<Tuple4i>constantSupplier(new Point4i(value)));
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is obtained from the
+     * given supplier
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setTuple4i(
+        Program program, String uniformName,
+        Supplier<Tuple4i> supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setTuple4i(
+                    program, uniformName, supplier.get());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setTuple4i(" + 
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.get()+")";
+            }
+            
+        });
+    }
+    
+    
 
     /**
      * Creates a new {@link Command} that sets the specified uniform variable
@@ -1103,12 +1499,7 @@ public class Commands
     public static Command setInt(
         Program program, Parameter parameter, int value)
     {
-        if (parameter.getType() != ParameterType.INT)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.INT+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.INT);
         return setInt(program, parameter.getName(), value);
     }
 
@@ -1143,6 +1534,59 @@ public class Commands
             }
         });
     }
+
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is provided by the
+     * given supplier.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType INT}  
+     */
+    public static Command setInt(
+        Program program, Parameter parameter, IntSupplier supplier)
+    {
+        checkParameterType(parameter, ParameterType.INT);
+        return setInt(program, parameter.getName(), supplier);
+    }
+
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is provided by the
+     * given supplier.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setInt(
+        Program program, String uniformName, IntSupplier supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setInt(
+                    program, uniformName, supplier.getAsInt());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setInt("+
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.getAsInt()+")";
+            }
+        });
+    }
     
     
     /**
@@ -1159,12 +1603,7 @@ public class Commands
     public static Command setFloat(
         Program program, Parameter parameter, float value)
     {
-        if (parameter.getType() != ParameterType.FLOAT)
-        {
-            throw new IllegalArgumentException(
-                "Type of paramter must be "+ParameterType.FLOAT+
-                " but is "+parameter.getType());
-        }
+        checkParameterType(parameter, ParameterType.FLOAT);
         return setFloat(program, parameter.getName(), value);
     }
     
@@ -1201,6 +1640,59 @@ public class Commands
     }
     
 
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is provided by the
+     * given supplier.
+     * 
+     * @param program The {@link Program} 
+     * @param parameter The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     * @throws IllegalArgumentException If the given {@link Parameter} does
+     * not have the type {@link ParameterType FLOAT}  
+     */
+    public static Command setFloat(
+        Program program, Parameter parameter, DoubleSupplier supplier)
+    {
+        checkParameterType(parameter, ParameterType.FLOAT);
+        return setFloat(program, parameter.getName(), supplier);
+    }
+    
+    /**
+     * Creates a new {@link Command} that sets the specified uniform variable
+     * for the given {@link Program} to the value that is provided by the
+     * given supplier.
+     * 
+     * @param program The {@link Program} 
+     * @param uniformName The name of the uniform
+     * @param supplier The supplier for the value to set
+     * @return The new {@link Command}
+     */
+    public static Command setFloat(
+        Program program, String uniformName, DoubleSupplier supplier)
+    {
+        return wrap(new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                renderer.getProgramHandler().setFloat(
+                    program, uniformName, (float)supplier.getAsDouble());
+            }
+
+            @Override
+            public String toString()
+            {
+                return "setFloat("+
+                    "program="+program+", "+
+                    "uniformName="+uniformName+", "+
+                    "supplier.get()="+supplier.getAsDouble()+")";
+            }
+        });
+    }
+    
+    
     /**
      * Creates a new {@link Command} that sets the 
      * {@link Parameters#NUM_TEXTURES} 
@@ -1414,6 +1906,50 @@ public class Commands
         programHandler.setFloat(program, 
             lightParameters.QUADRATIC_ATTENUATION.getName(), 
             light.getQuadraticAttenuation());
+    }
+    
+    
+    /**
+     * Wraps the given {@link Command} into a {@link Command} that prints
+     * tracing information whenever the given command is executed.
+     * 
+     * @param command The delegate {@link Command}
+     * @return The tracing {@link Command}
+     */
+    public static Command tracing(Command command)
+    {
+        return new Command()
+        {
+            @Override
+            public void execute(Renderer renderer)
+            {
+                if (logger.isLoggable(traceLogLevel))
+                {
+                    logger.log(traceLogLevel, "Executing "+command);
+                }
+                command.execute(renderer);
+            }
+        };
+        
+    }
+
+    /**
+     * Utility method that checks whether the given {@link Parameter} has
+     * the given {@link ParameterType}, and throws an 
+     * <code>IllegalArgumentException</code> if this is not the case
+     * 
+     * @param parameter The {@link Parameter}
+     * @param parameterType The {@link ParameterType}
+     */
+    private static void checkParameterType(
+        Parameter parameter, ParameterType parameterType)
+    {
+        if (parameter.getType() != parameterType)
+        {
+            throw new IllegalArgumentException(
+                "Type of paramter must be "+parameterType+
+                " but is "+parameter.getType());
+        }
     }
     
     

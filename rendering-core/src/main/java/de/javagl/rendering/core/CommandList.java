@@ -54,6 +54,18 @@ public final class CommandList implements Supplier<List<Command>>
     }
     
     /**
+     * Adds the given {@link Command} to this list
+     * 
+     * @param command The {@link Command} to add
+     * @return This list
+     */
+    public CommandList add(Command command)
+    {
+        this.commands.add(command);
+        return this;
+    }
+    
+    /**
      * Add the given {@link Command}s to this list
      * 
      * @param commands The {@link Command}s to add
