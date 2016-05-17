@@ -63,7 +63,7 @@ class DefaultCamera implements Camera
      * The list of listeners attached to this camera
      */
     private final List<CameraListener> cameraListeners;
-    
+
     /**
      * Creates a new DefaultCamera with an eyePoint at (0,0,1),
      * a viewPoint of (0,0,0), an upVector of (0,1,0) and a

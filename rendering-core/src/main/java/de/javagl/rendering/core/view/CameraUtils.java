@@ -67,6 +67,38 @@ public class CameraUtils
         return viewMatrix;
     }
     
+    /**
+     * Compute the rotation matrix that describes the orientation of 
+     * the given {@link Camera}, based on its eye point, view point
+     * and up vector
+     * 
+     * @param camera The {@link Camera}
+     * @return The rotation matrix
+     */
+    public static Matrix4f computeRotation(Camera camera)
+    {
+        Point3f eye = camera.getEyePoint();
+        Point3f view = camera.getViewPoint();
+        Vector3f up = camera.getUpVector();
+
+        Vector3f z = new Vector3f();
+        z.sub(eye, view);
+        z.normalize();
+        Vector3f x = new Vector3f();
+        x.cross(up, z);
+        x.normalize();
+        Vector3f y = new Vector3f();
+        y.cross(z, x);
+        y.normalize();
+
+        Matrix4f rotation = new Matrix4f();
+        rotation.setIdentity();
+        rotation.setColumn(0, x.x, x.y, x.z, 0.0f);
+        rotation.setColumn(1, y.x, y.y, y.z, 0.0f);
+        rotation.setColumn(2, z.x, z.y, z.z, 0.0f);
+        return rotation;
+    }
+    
     
     /**
      * Returns the camera matrix for the given {@link Camera}. The orientation 
