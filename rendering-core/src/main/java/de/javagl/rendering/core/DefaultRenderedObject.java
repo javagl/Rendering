@@ -57,6 +57,11 @@ class DefaultRenderedObject implements RenderedObject
     private final Mapping<Parameter, Texture> textureMapping;
 
     /**
+     * The cached hash code of this object
+     */
+    private int hashCode = 0;
+    
+    /**
      * Creates a new rendered object, which uses the given {@link Program} 
      * to render the given {@link GraphicsObject} using the given
      * {@link Attribute} {@link Mapping}.
@@ -92,6 +97,9 @@ class DefaultRenderedObject implements RenderedObject
         this.graphicsObject = graphicsObject;
         this.attributeMapping = attributeMapping;
         this.textureMapping = textureMapping;
+        
+        this.hashCode = Objects.hash(
+            attributeMapping, graphicsObject, program, textureMapping);
     }
 
     @Override
@@ -131,8 +139,7 @@ class DefaultRenderedObject implements RenderedObject
     @Override
     public int hashCode()
     {
-        return Objects.hash(
-            attributeMapping, graphicsObject, program, textureMapping);
+        return hashCode;
     }
 
     @Override
