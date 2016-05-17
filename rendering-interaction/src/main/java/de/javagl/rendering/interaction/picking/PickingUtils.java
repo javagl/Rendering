@@ -66,12 +66,12 @@ public class PickingUtils
 
     /**
      * Compute a picking {@link Ray} given the view matrix, projection 
-     * matrix, viewport and position. The camera matrix contains the 
-     * rotation and translation for the camera. The projectionMatrix 
-     * contains solely the perspective projection transformation. The 
-     * viewport describes the rectangle that the picking occurs in. 
-     * The x and y coordinates are the position where the picking ray 
-     * should start, in screen coordinates.
+     * matrix, viewport and position. The view matrix is the inverse
+     * of the camera matrix, which contains the rotation and translation 
+     * of the camera. The projectionMatrix contains only the perspective 
+     * projection transformation. The viewport describes the rectangle 
+     * that the picking occurs in. The x and y coordinates are the 
+     * position where the picking ray should start, in screen coordinates.
      * 
      * @param viewMatrix The view matrix
      * @param projectionMatrix The projection matrix
