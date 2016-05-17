@@ -68,11 +68,47 @@ public class CameraControls
     public static Control createDefaultArcballControl(View view)
     {
         Objects.requireNonNull(view, "The view may not be null");
-        ArcballCameraBehavior arcballCameraBehavior = 
+        CameraBehavior cameraBehavior = 
             new ArcballCameraBehavior(view);
-        ArcballCameraControl arcballCameraControl = 
-            new ArcballCameraControl(arcballCameraBehavior);
+        CameraControl arcballCameraControl = 
+            new CameraControl(cameraBehavior);
         return arcballCameraControl;
+    }
+    
+    /**
+     * Creates a new {@link Control} that allows controlling the 
+     * {@link Camera} in the given {@link View} an trackball style.<br>
+     * <br>
+     * <b>Note</b>: Many details about the behavior of the returned 
+     * {@link Control} (like rotation-, translation- and zooming speed) 
+     * are intentionally <b>not specified</b>.<br>
+     * <br>
+     * However, one can assume that the control allows a "reasonable"
+     * (and reasonably "intuitive") default navigation. The current 
+     * implementation (which may change arbitrarily!) is:
+     * <ul>
+     *   <li>left mouse drags to rotate the camera</li>
+     *   <li>right mouse drags to move the camera</li>
+     *   <li>
+     *     mouse wheel to zoom, by moving the eye point towards or away 
+     *     from the view point
+     *   </li>
+     *   <li>middle mouse click to reset the camera</li>
+     * </ul>
+     * 
+     * @param view The {@link View} that provides the 
+     * {@link View#getViewport() viewport} and the 
+     * {@link View#getCamera() camera}
+     * @return The {@link Control}
+     */
+    public static Control createDefaultTrackballControl(View view)
+    {
+        Objects.requireNonNull(view, "The view may not be null");
+        CameraBehavior cameraBehavior = 
+            new TrackballCameraBehavior(view);
+        CameraControl trackballCameraControl = 
+            new CameraControl(cameraBehavior);
+        return trackballCameraControl;
     }
     
     /**

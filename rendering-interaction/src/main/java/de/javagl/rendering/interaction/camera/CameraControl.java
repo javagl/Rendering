@@ -44,20 +44,20 @@ import de.javagl.rendering.interaction.Control;
 
 /**
  * Implementation of a {@link Control} that modifies a {@link Camera} using
- * an {@link ArcballCameraBehavior}. <br>
+ * a {@link CameraBehavior}. <br>
  */
-class ArcballCameraControl implements Control
+class CameraControl implements Control
 {
     /**
      * The logger used in this class
      */
     private static final Logger logger = 
-        Logger.getLogger(ArcballCameraControl.class.getName());
+        Logger.getLogger(CameraControl.class.getName());
     
     /**
      * The listener that is maintained by this control. It will be
      * attached to or detached from the component, and dispatch all
-     * relevant method calls to the {@link ArcballCameraBehavior}
+     * relevant method calls to the {@link CameraBehavior}
      */
     private final class Listener extends MouseInputAdapter
         implements MouseListener, MouseMotionListener, MouseWheelListener
@@ -69,11 +69,11 @@ class ArcballCameraControl implements Control
             
             if (is(e, MouseEvent.BUTTON1_DOWN_MASK))
             {
-                arcballCameraBehavior.startArcballRotate(e.getPoint());
+                cameraBehavior.startRotate(e.getPoint());
             }
             if (is(e, MouseEvent.BUTTON3_DOWN_MASK))
             {
-                arcballCameraBehavior.startMovement(e.getPoint());
+                cameraBehavior.startMovement(e.getPoint());
             }
         }
         
@@ -84,7 +84,7 @@ class ArcballCameraControl implements Control
 
             if (e.getButton() == MouseEvent.BUTTON2)
             {
-                arcballCameraBehavior.reset();
+                cameraBehavior.reset();
             }
         }
 
@@ -95,11 +95,11 @@ class ArcballCameraControl implements Control
 
             if (is(e, MouseEvent.BUTTON1_DOWN_MASK))
             {
-                arcballCameraBehavior.doArcballRotate(e.getPoint());
+                cameraBehavior.doRotate(e.getPoint());
             }
             if (is(e, MouseEvent.BUTTON3_DOWN_MASK))
             {
-                arcballCameraBehavior.doMovement(e.getPoint());
+                cameraBehavior.doMovement(e.getPoint());
             }
         }
 
@@ -107,15 +107,21 @@ class ArcballCameraControl implements Control
         public void mouseWheelMoved(MouseWheelEvent e)
         {
             logger.log(Level.FINE, "mouseWheelMoved "+e);
-            
-            arcballCameraBehavior.zoom(e.getWheelRotation());
+            if (is(e, InputEvent.SHIFT_DOWN_MASK))
+            {
+                cameraBehavior.translateZ(e.getWheelRotation());
+            }
+            else
+            {
+                cameraBehavior.zoom(e.getWheelRotation());
+            }
         }
     }
     
     /**
-     * The controlled {@link ArcballCameraBehavior}
+     * The controlled {@link CameraBehavior}
      */
-    private final ArcballCameraBehavior arcballCameraBehavior;
+    private final CameraBehavior cameraBehavior;
 
     /**
      * The listener instance
@@ -128,14 +134,14 @@ class ArcballCameraControl implements Control
     private boolean enabled;
     
     /**
-     * Creates a new ArcballCameraControl that controls the
-     * given ArcballCameraBehavior
+     * Creates a new CameraControl that controls the
+     * given {@link CameraBehavior}
      * 
-     * @param arcballCameraBehavior The ArcballCameraBehavior
+     * @param cameraBehavior The CameraBehavior
      */
-    ArcballCameraControl(ArcballCameraBehavior arcballCameraBehavior)
+    CameraControl(CameraBehavior cameraBehavior)
     {
-        this.arcballCameraBehavior = arcballCameraBehavior;
+        this.cameraBehavior = cameraBehavior;
         this.listener = new Listener();
         this.enabled = true;
     }

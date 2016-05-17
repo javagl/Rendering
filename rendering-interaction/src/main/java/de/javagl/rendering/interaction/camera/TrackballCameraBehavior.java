@@ -31,10 +31,9 @@ import java.awt.Point;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 
+import de.javagl.rendering.core.utils.MatrixUtils;
 import de.javagl.rendering.core.view.Camera;
 import de.javagl.rendering.core.view.CameraUtils;
 import de.javagl.rendering.core.view.Cameras;
@@ -42,15 +41,21 @@ import de.javagl.rendering.core.view.Rectangle;
 import de.javagl.rendering.core.view.View;
 
 /**
- * This class is a {@link CameraBehavior} that performs the movement of 
- * the {@link Camera} of a {@link View} in an Arcball style. <br> 
+ * This class controls the movement of the {@link Camera} of a {@link View} 
+ * in a Trackball style. <br> 
+ * <br>
  */
-class ArcballCameraBehavior implements CameraBehavior
+class TrackballCameraBehavior implements CameraBehavior 
 {
     /**
      * A factor to compute the zoom from a mouse wheel rotation
      */
     private static final float ZOOMING_SPEED = 0.1f;
+    
+    /**
+     * A factor to compute the rotation from a mouse movement
+     */
+    private static final float ROTATION_SPEED = 1.0f;
     
     /**
      * The view this behavior operates on
@@ -68,38 +73,17 @@ class ArcballCameraBehavior implements CameraBehavior
     private final Point previousPosition = new Point();
 
     /**
-     * The Quaternion describing the rotation when dragging started
-     */
-    private final Quat4f dragStartRotation = new Quat4f(0, 0, 0, 1);
-
-    /**
-     * The Quaternion describing the current rotation
-     */
-    private final Quat4f currentRotation = new Quat4f(0, 0, 0, 1);
-
-    /**
-     * The position in 3D space where dragging started
-     */
-    private final Vector3f dragStartPosition = new Vector3f();
-
-    /**
-     * The current position in 3D space
-     */
-    private final Vector3f currentDragPosition = new Vector3f();
-
-    /**
-     * Creates a new ArcballCameraBehavior for the {@link Camera} in 
+     * Creates a new TrackballCameraBehavior for the {@link Camera} in 
      * the given {@link View}
      * 
      * @param view The {@link View}
      */
-    ArcballCameraBehavior(View view)
+    TrackballCameraBehavior(View view)
     {
         this.view = view;
         this.initialCamera = Cameras.create();
         Camera camera = view.getCamera();
         set(initialCamera, camera);
-        reset();
     }
     
     /**
@@ -116,96 +100,58 @@ class ArcballCameraBehavior implements CameraBehavior
         target.setUpVector(source.getUpVector());
         target.setFovDegY(source.getFovDegY());
     }
-    
+
     @Override
     public void reset()
     {
         Camera camera = view.getCamera();
         set(camera, initialCamera);
-
-        Matrix4f rotation = CameraUtils.computeRotation(camera);
-        rotation.transpose();
-        currentRotation.set(rotation);
     }
-    
 
     @Override
     public void startRotate(Point point)
     {
-        mapOnArcball(point.x, point.y, dragStartPosition);
-        dragStartRotation.set(currentRotation);
+        previousPosition.setLocation(point);
     }
 
     @Override
     public void doRotate(Point point)
     {
-        mapOnArcball(point.x, point.y, currentDragPosition);
-        float dot = dragStartPosition.dot(currentDragPosition);
-        Vector3f tmp = new Vector3f();
-        tmp.cross(dragStartPosition, currentDragPosition);
-
-        Quat4f q = new Quat4f(tmp.x, tmp.y, tmp.z, dot);
-        currentRotation.mul(q, dragStartRotation);
-
-        updateRotation();
-    }
-
-    /**
-     * Update the eyePoint and upVector according to the current rotation
-     */
-    private void updateRotation()
-    {
         Camera camera = view.getCamera();
 
-        Matrix4f currentMatrix = new Matrix4f();
-        currentMatrix.set(currentRotation);
-        currentMatrix.transpose();
+        int dx = point.x - previousPosition.x;
+        int dy = point.y - previousPosition.y;
+        
+        Rectangle viewport = view.getViewport();
+        float relDx = (float)dx / viewport.getWidth(); 
+        float relDy = (float)dy / viewport.getHeight(); 
+        
+        Matrix4f rotX = MatrixUtils.rotX(-relDy * ROTATION_SPEED * Math.PI * 2);
+        Matrix4f rotY = MatrixUtils.rotY(-relDx * ROTATION_SPEED * Math.PI * 2);
+        
+        Matrix4f rotation = CameraUtils.computeRotation(camera);
+        rotation.mul(rotX);
+        rotation.mul(rotY);
+        
+        Vector3f initialEyeToViewDirection = 
+            CameraBehaviorUtils.computeEyeToViewVector(initialCamera);
+        initialEyeToViewDirection.normalize();
         
         float currentEyeToViewDistance = 
             CameraBehaviorUtils.computeEyeToViewDistance(camera);
         
-        Vector3f initialEyeToView = 
-            CameraBehaviorUtils.computeEyeToViewVector(initialCamera);
-        initialEyeToView.normalize();
-        initialEyeToView.scale(currentEyeToViewDistance);
-        currentMatrix.transform(initialEyeToView);
+        rotation.transform(initialEyeToViewDirection);
+        Point3f newEyePoint = new Point3f();
+        newEyePoint.scaleAdd(-currentEyeToViewDistance, 
+            initialEyeToViewDirection, camera.getViewPoint());
         
-        Vector3f upVector = camera.getUpVector();
-        Vector3f initialUpVector = initialCamera.getUpVector();
-        currentMatrix.transform(initialUpVector, upVector);
+        Vector3f upVector = initialCamera.getUpVector();
+        rotation.transform(upVector);
+        
+        camera.setEyePoint(newEyePoint);
         camera.setUpVector(upVector);
         
-        Point3f eyePoint = new Point3f();
-        eyePoint.sub(camera.getViewPoint(), initialEyeToView);
-        camera.setEyePoint(eyePoint);
-    }
-
-    /**
-     * Maps the given point onto the arcball
-     * 
-     * @param x The x-screen coordinate of the point
-     * @param y The y-screen coordinate of the point
-     * @param mappedPoint The point on the arcball in 3D
-     */
-    private void mapOnArcball(int x, int y, Vector3f mappedPoint)
-    {
-        Vector2f temp = new Vector2f();
-        Rectangle viewport = view.getViewport();
-        temp.x = ((float)x / (viewport.getWidth() / 2)) - 1.0f;
-        temp.y = -(((float)y / (viewport.getHeight() / 2)) - 1.0f);
-        float length = temp.length();
-        if (length > 1.0f)
-        {
-            mappedPoint.x = temp.x / length;
-            mappedPoint.y = temp.y / length;
-            mappedPoint.z = 0.0f;
-        }
-        else
-        {
-            mappedPoint.x = temp.x;
-            mappedPoint.y = temp.y;
-            mappedPoint.z = (float) Math.sqrt(1.0f - length);
-        }
+        previousPosition.setLocation(point);
     }
 
     @Override
@@ -230,12 +176,9 @@ class ArcballCameraBehavior implements CameraBehavior
         float eyeToViewDistance = 
             CameraBehaviorUtils.computeEyeToViewDistance(camera);
         delta.scale(eyeToViewDistance);
-
-        Matrix4f currentMatrix = new Matrix4f();
-        currentMatrix.setIdentity();
-        currentMatrix.set(currentRotation);
-        currentMatrix.transpose();
-        currentMatrix.transform(delta);
+        
+        Matrix4f rotation = CameraUtils.computeRotation(camera);
+        rotation.transform(delta);
 
         CameraBehaviorUtils.translate(camera, delta);
         
