@@ -48,6 +48,7 @@ import de.javagl.rendering.geometry.MutableArray3f;
  * Unless otherwise noted, none of the arguments for these methods
  * may be <code>null</code>.
  */
+@SuppressWarnings("javadoc")
 public class GeometryUtils
 {
     // Note: Due to the improved escape analysis in Java 1.7, 

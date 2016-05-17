@@ -39,6 +39,7 @@ import javax.vecmath.Vector3f;
  * <br>
  * The methods in these classes are NOT thread-safe!
  */
+@SuppressWarnings("javadoc")
 public class Intersection
 {
     /**
@@ -46,14 +47,19 @@ public class Intersection
      */
     public static class RayTriangle
     {
+        /**
+         * An epsilon for floating point computations
+         */
         private static final float EPSILON = 1e-7f;
         
         // Note: Due to the improved escape analysis in Java 1.7, 
         // the temporary variables might be omitted
 
+        // Temporary variables
         private static final Vector3f tempEdge0 = new Vector3f();
         private static final Vector3f tempEdge1 = new Vector3f();
 
+        // Temporary variables
         private static final Vector3f tempVector3f0 = new Vector3f();
         private static final Vector3f tempVector3f1 = new Vector3f();
         private static final Vector3f tempVector3f2 = new Vector3f();
@@ -83,7 +89,6 @@ public class Intersection
             Tuple3f rayOrigin, Vector3f normalizedRayDirection, 
             Tuple3f p0, Tuple3f p1, Tuple3f p2, Tuple3f result)
         {
-            //System.out.println("Intersect "+rayDirection+" len "+rayDirection.length());
             tempEdge0.sub(p1, p0);
             tempEdge1.sub(p2, p0);
             tempVector3f0.cross(normalizedRayDirection, tempEdge1);
