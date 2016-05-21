@@ -33,8 +33,6 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.Objects;
 
-import javax.vecmath.Point3f;
-
 import de.javagl.rendering.core.utils.BufferUtils;
 
 /**
@@ -421,16 +419,16 @@ public class GraphicsObjects
             "The verticesAttribute may not be null");
 
         // "Boolean" numbering scheme
-        Point3f points[] =
+        float points[][] =
         {
-            new Point3f( 0, 0, 0),
-            new Point3f( 1, 0, 0),
-            new Point3f( 0, 1, 0),
-            new Point3f( 1, 1, 0),
-            new Point3f( 0, 0, 1),
-            new Point3f( 1, 0, 1),
-            new Point3f( 0, 1, 1),
-            new Point3f( 1, 1, 1),
+            { 0, 0, 0 },
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 1, 1, 0 },
+            { 0, 0, 1 },
+            { 1, 0, 1 },
+            { 0, 1, 1 },
+            { 1, 1, 1 },
         };
 
         byte indices[] = 
@@ -461,9 +459,9 @@ public class GraphicsObjects
         float vertices[] = new float[24*3];
         for (int i=0; i<24; i++)
         {
-            vertices[i*3+0] = points[quadIndices[i]].x;
-            vertices[i*3+1] = points[quadIndices[i]].y;
-            vertices[i*3+2] = points[quadIndices[i]].z;
+            vertices[i*3+0] = points[quadIndices[i]][0];
+            vertices[i*3+1] = points[quadIndices[i]][1];
+            vertices[i*3+2] = points[quadIndices[i]][2];
         }
 
         
