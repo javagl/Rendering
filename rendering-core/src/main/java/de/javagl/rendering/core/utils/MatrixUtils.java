@@ -49,8 +49,8 @@ public class MatrixUtils
      * in column-major order and returns it. It is assumed that the 
      * given buffer has enough space for the matrix. If the given 
      * buffer is <code>null</code>, a new buffer will be created 
-     * and returned. The position of the buffer will afterwards
-     * be the same as before this call. 
+     * and returned. The position of the buffer will be advanced
+     * by 9, according to the elements that are written.
      * 
      * @param matrix The matrix
      * @param buffer The buffer to write to
@@ -64,7 +64,6 @@ public class MatrixUtils
         {
             result = BufferUtils.createFloatBuffer(9);
         }
-        int oldPosition = result.position();
         result.put(matrix.m00);
         result.put(matrix.m10);
         result.put(matrix.m20);
@@ -74,7 +73,6 @@ public class MatrixUtils
         result.put(matrix.m02);
         result.put(matrix.m12);
         result.put(matrix.m22);
-        result.position(oldPosition);
         return result;
     }
     
@@ -84,8 +82,8 @@ public class MatrixUtils
      * in column-major order and returns it. It is assumed that the 
      * given buffer has enough space for the matrix. If the given 
      * buffer is <code>null</code>, a new buffer will be created 
-     * and returned. The position of the buffer will afterwards
-     * be the same as before this call.
+     * and returned. The position of the buffer will be advanced
+     * by 16, according to the elements that are written.
      * 
      * @param matrix The matrix
      * @param buffer The buffer to write to
@@ -99,7 +97,6 @@ public class MatrixUtils
         {
             result = BufferUtils.createFloatBuffer(16);
         }
-        int oldPosition = result.position();
         result.put(matrix.m00);
         result.put(matrix.m10);
         result.put(matrix.m20);
@@ -116,7 +113,6 @@ public class MatrixUtils
         result.put(matrix.m13);
         result.put(matrix.m23);
         result.put(matrix.m33);
-        result.position(oldPosition);
         return result;
     }
 
@@ -127,8 +123,8 @@ public class MatrixUtils
      * in column-major order and returns it. It is assumed that the 
      * given buffer has enough remaining data to fill the matrix. 
      * If the given matrix is <code>null</code>, a new matrix is 
-     * created and returned. The position of the buffer will 
-     * afterwards be the same as before this call.
+     * created and returned. The position of the buffer will be 
+     * advanced by 16, according to the elements that are read.
      * 
      * @param buffer The buffer to read from
      * @param matrix The matrix to fill
@@ -142,7 +138,6 @@ public class MatrixUtils
         {
             result = new Matrix4f();
         }
-        int oldPosition = buffer.position();
         result.m00 = buffer.get();
         result.m10 = buffer.get();
         result.m20 = buffer.get();
@@ -159,7 +154,6 @@ public class MatrixUtils
         result.m13 = buffer.get();
         result.m23 = buffer.get();
         result.m33 = buffer.get();
-        buffer.position(oldPosition);
         return result;
     }
 
@@ -168,8 +162,8 @@ public class MatrixUtils
      * in column-major order and returns it. It is assumed that the 
      * given buffer has enough remaining data to fill the matrix. 
      * If the given matrix is <code>null</code>, a new matrix is 
-     * created and returned. The position of the buffer will 
-     * afterwards be the same as before this call. 
+     * created and returned. The position of the buffer will be 
+     * advanced by 9, according to the elements that are read.
      * 
      * @param buffer The buffer to read from
      * @param matrix The matrix to fill
@@ -183,7 +177,6 @@ public class MatrixUtils
         {
             result = new Matrix3f();
         }
-        int oldPosition = buffer.position();
         result.m00 = buffer.get();
         result.m10 = buffer.get();
         result.m20 = buffer.get();
@@ -193,7 +186,6 @@ public class MatrixUtils
         result.m02 = buffer.get();
         result.m12 = buffer.get();
         result.m22 = buffer.get();
-        buffer.position(oldPosition);
         return result;
     }
 
@@ -596,6 +588,40 @@ public class MatrixUtils
         return result;
     }
 
+    /**
+     * Returns a deep copy of the given array. The given array may not
+     * be <code>null</code>, and may not contain <code>null</code> elements.
+     * 
+     * @param array The array
+     * @return The deep copy
+     */
+    public static Matrix4f[] deepCopy(Matrix4f ... array)
+    {
+        Matrix4f result[] = new Matrix4f[array.length];
+        for (int i=0; i<array.length; i++)
+        {
+            result[i] = new Matrix4f(array[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Returns a deep copy of the given array. The given array may not
+     * be <code>null</code>, and may not contain <code>null</code> elements.
+     * 
+     * @param array The array
+     * @return The deep copy
+     */ 
+    public static Matrix3f[] deepCopy(Matrix3f ... array)
+    {
+        Matrix3f result[] = new Matrix3f[array.length];
+        for (int i=0; i<array.length; i++)
+        {
+            result[i] = new Matrix3f(array[i]);
+        }
+        return result;
+    }
+    
     
     /**
      * Private constructor to prevent instantiation

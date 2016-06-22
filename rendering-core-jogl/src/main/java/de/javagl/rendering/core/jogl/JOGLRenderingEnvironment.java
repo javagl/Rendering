@@ -109,8 +109,10 @@ public class JOGLRenderingEnvironment
         return renderer;
     }
     
-    
-    private GLEventListener glEventListener = new GLEventListener()
+    /**
+     * The event listener that will be attached to the canvas
+     */
+    private final GLEventListener glEventListener = new GLEventListener()
     {
         private boolean initComplete;
 
@@ -124,7 +126,6 @@ public class JOGLRenderingEnvironment
 
             //gl = glComponent.setGL(new TraceGL3(gl, System.out)).getGL3();
             //gl = glComponent.setGL(new DebugGL3(gl)).getGL3();
-            
             
             initComplete = true;
         }
@@ -186,25 +187,6 @@ public class JOGLRenderingEnvironment
     }
     
 
-    
-    
-    
-    
-    
-    
-    
-
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
-//    @Override
-//    public void enableFrameBufferTexture(
-//        Program program, String programInputName, FrameBuffer frameBuffer)
-//    {
-//        GLTexture glTexture = 
-//            getRenderer().getFrameBufferHandler().getInternal(frameBuffer).getGLTexture();
-//        getRenderer().getRenderedObjectHandler().enableTexture(program, programInputName, glTexture);
-//    }
-
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
     @Override
     public void handleFrameBuffer(final FrameBuffer frameBuffer)
     {
@@ -218,7 +200,6 @@ public class JOGLRenderingEnvironment
         }));
     }
     
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
     @Override
     public void releaseFrameBuffer(final FrameBuffer frameBuffer)
     {
@@ -231,8 +212,6 @@ public class JOGLRenderingEnvironment
             }
         }));
     }
-
-
 
     
     

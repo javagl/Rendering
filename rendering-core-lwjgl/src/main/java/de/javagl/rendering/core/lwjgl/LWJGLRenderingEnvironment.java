@@ -88,11 +88,13 @@ public class LWJGLRenderingEnvironment
         
         try
         {
-            canvas = new AWTGLCanvas()
+            canvas = new AWTGLCanvas() //new PixelFormat(32, 0, 24, 0, 4))
             {
+                
                 @Override
                 public void paintGL()
                 {
+                    //long beforeNs = System.nanoTime();
                     render();
                     try
                     {
@@ -103,7 +105,10 @@ public class LWJGLRenderingEnvironment
                         throw new RenderingException(
                             "Could not swap buffers", e);
                     }
+                    //long afterNs = System.nanoTime();
+                    //timingCollector.collect(afterNs - beforeNs);
                 }
+                
             };
         }
         catch (LWJGLException e)
@@ -164,17 +169,7 @@ public class LWJGLRenderingEnvironment
     }
     
     
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
-//    @Override
-//    public void enableFrameBufferTexture(
-//        Program program, String programInputName, FrameBuffer frameBuffer)
-//    {
-//        GLTexture glTexture = 
-//            getRenderer().getFrameBufferHandler().getInternal(frameBuffer).getGLTexture();
-//        getRenderer().getRenderedObjectHandler().enableTexture(program, programInputName, glTexture);
-//    }
 
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
     @Override
     public void handleFrameBuffer(final FrameBuffer frameBuffer)
     {
@@ -188,7 +183,6 @@ public class LWJGLRenderingEnvironment
         }));
     }
     
-    // XXX TODO Could be in AbstractGLRenderingEnvironment
     @Override
     public void releaseFrameBuffer(final FrameBuffer frameBuffer)
     {
@@ -203,7 +197,35 @@ public class LWJGLRenderingEnvironment
     }
 
  
-    
+    /*/ VERY basic timing tests
+    private final TimingCollector timingCollector = new TimingCollector();
+    private static class TimingCollector
+    {
+        private final Deque<Long> timesNs = new LinkedList<Long>(); 
+        private final int maxStoredTimes = 10;
+        private long counter = 0;
+        private final long reportInterval = 10;
+        
+        void collect(long timeNs)
+        {
+            timesNs.add(timeNs);
+            while (timesNs.size() > maxStoredTimes)
+            {
+                timesNs.removeFirst();
+            }
+            counter++;
+            if ((counter % reportInterval) == 0)
+            {
+                LongSummaryStatistics stats = timesNs.stream()
+                    .collect(Collectors.summarizingLong(d -> d));
+                double averageNs = stats.getAverage();
+                double averageMs = averageNs * 1e-6;
+                System.out.println("Average time: "+averageMs+"ms");
+            }
+        }
+    }
+    //*/
+   
     
 //    private final IntBuffer m = BufferUtils.createIntBuffer(16);
 //    @SuppressWarnings("unused")

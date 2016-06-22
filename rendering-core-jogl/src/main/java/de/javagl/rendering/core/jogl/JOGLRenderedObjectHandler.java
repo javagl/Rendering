@@ -99,8 +99,7 @@ class JOGLRenderedObjectHandler
     /**
      * Set the current GL instance. If the given GL instance is not
      * the same as the one that is currently stored in this class,
-     * then the objects will be re-initialized by calling
-     * {@link #reInitialize()}.
+     * then the objects will be re-initialized.
      * 
      * @param gl The current GL instance
      */

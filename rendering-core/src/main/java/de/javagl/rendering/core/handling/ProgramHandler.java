@@ -58,6 +58,15 @@ public interface ProgramHandler<U> extends Handler<Program, U>
     void setMatrix3f(Program program, String name, Matrix3f value);
 
     /**
+     * Set the values of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setMatrix3f(Program program, String name, Matrix3f ... values);
+
+    /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
@@ -65,6 +74,15 @@ public interface ProgramHandler<U> extends Handler<Program, U>
      * @param value The value
      */
     void setMatrix4f(Program program, String name, Matrix4f value);
+
+    /**
+     * Set the values of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setMatrix4f(Program program, String name, Matrix4f ... values);
     
     /**
      * Set the value of the specified uniform of the given {@link Program}
@@ -74,33 +92,69 @@ public interface ProgramHandler<U> extends Handler<Program, U>
      * @param value The value
      */
     void setFloat(Program program, String name, float value);
+
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setFloat(Program program, String name, float ... values);
     
     /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param value The value
      */
-    void setTuple2f(Program program, String name, Tuple2f tuple);
+    void setTuple2f(Program program, String name, Tuple2f value);
 
     /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param values The values
      */
-    void setTuple3f(Program program, String name, Tuple3f tuple);
+    void setTuple2f(Program program, String name, Tuple2f ... values);
+    
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param value The value
+     */
+    void setTuple3f(Program program, String name, Tuple3f value);
 
     /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param values The values
      */
-    void setTuple4f(Program program, String name, Tuple4f tuple);
+    void setTuple3f(Program program, String name, Tuple3f ... values);
+
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param value The value
+     */
+    void setTuple4f(Program program, String name, Tuple4f value);
+
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setTuple4f(Program program, String name, Tuple4f ... values);
 
     /**
      * Set the value of the specified uniform of the given {@link Program}
@@ -116,26 +170,62 @@ public interface ProgramHandler<U> extends Handler<Program, U>
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param values The values
      */
-    void setTuple2i(Program program, String name, Tuple2i tuple);
+    void setInt(Program program, String name, int ... values);
+    
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param value The value
+     */
+    void setTuple2i(Program program, String name, Tuple2i value);
 
     /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param values The values
      */
-    void setTuple3i(Program program, String name, Tuple3i tuple);
+    void setTuple2i(Program program, String name, Tuple2i ... values);
 
     /**
      * Set the value of the specified uniform of the given {@link Program}
      *   
      * @param program The {@link Program}
      * @param name The name of the uniform
-     * @param tuple The value
+     * @param value The value
      */
-    void setTuple4i(Program program, String name, Tuple4i tuple);
+    void setTuple3i(Program program, String name, Tuple3i value);
+
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setTuple3i(Program program, String name, Tuple3i ... values);
+
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param value The value
+     */
+    void setTuple4i(Program program, String name, Tuple4i value);
+    
+    /**
+     * Set the value of the specified uniform of the given {@link Program}
+     *   
+     * @param program The {@link Program}
+     * @param name The name of the uniform
+     * @param values The values
+     */
+    void setTuple4i(Program program, String name, Tuple4i ... values);
     
 }

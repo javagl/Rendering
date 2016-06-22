@@ -43,6 +43,12 @@ import java.util.function.IntConsumer;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
+import javax.vecmath.Point2f;
+import javax.vecmath.Point2i;
+import javax.vecmath.Point3f;
+import javax.vecmath.Point3i;
+import javax.vecmath.Point4f;
+import javax.vecmath.Point4i;
 import javax.vecmath.Tuple2f;
 import javax.vecmath.Tuple2i;
 import javax.vecmath.Tuple3f;
@@ -63,6 +69,7 @@ import de.javagl.rendering.core.handling.AbstractProgramHandler;
 import de.javagl.rendering.core.handling.ProgramHandler;
 import de.javagl.rendering.core.utils.BufferUtils;
 import de.javagl.rendering.core.utils.MatrixUtils;
+import de.javagl.rendering.core.utils.TupleUtils;
 
 
 /**
@@ -73,17 +80,10 @@ class JOGLProgramHandler
     implements ProgramHandler<GLProgram>
 {
     /**
-     * Temporary buffer for 3x3 float matrices
+     * Temporary buffer for setting uniforms
      */
-    private final FloatBuffer tempMatrix3fBuffer = 
-        BufferUtils.createFloatBuffer(9);
-
-    /**
-     * Temporary buffer for 4x4 float matrices
-     */
-    private final FloatBuffer tempMatrix4fBuffer = 
-        BufferUtils.createFloatBuffer(16);
-
+    private ByteBuffer tempBuffer = null;
+    
     /**
      * A map from {@link Program} instances to the runnables that have
      * to be executed in order to update the uniforms of the given 
@@ -115,6 +115,19 @@ class JOGLProgramHandler
         this.gl = gl;
     }
     
+    /**
+     * Make sure that the {@link #tempBuffer} is not <code>null</code> and
+     * has at least the desired capacity
+     * 
+     * @param capacity The desired capacity 
+     */
+    private void ensureTempBufferCapacity(int capacity)
+    {
+        if (tempBuffer == null || tempBuffer.capacity() < capacity)
+        {
+            tempBuffer = BufferUtils.createByteBuffer(capacity);            
+        }
+    }
 
     @Override
     public GLProgram handleInternal(Program program)
@@ -194,8 +207,19 @@ class JOGLProgramHandler
         }
     }
 
-    
+    /**
+     * Whether invalid program location should be reported. 
+     */
     private static final boolean REPORT_INVALID_LOCATIONS = false;
+    
+    /**
+     * Will be called when a location is invalid. Note that this does not
+     * indicate a real error, because a location may also be invalid when
+     * the attribute- or uniform value is simply not used in the shader.  
+     * 
+     * @param program The {@link Program}
+     * @param name The attribute- or uniform name.
+     */
     private void locationInvalid(Program program, String name)
     {
         if (REPORT_INVALID_LOCATIONS)
@@ -269,11 +293,36 @@ class JOGLProgramHandler
         Matrix3f localValue = new Matrix3f(value);
         createSetter(program, name, location ->
         {
-            MatrixUtils.writeMatrixToBuffer(localValue, tempMatrix3fBuffer);
-            gl.glUniformMatrix3fv(location, 1, false, tempMatrix3fBuffer);
+            ensureTempBufferCapacity(9 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            MatrixUtils.writeMatrixToBuffer(localValue, tempBufferFloat);
+            tempBufferFloat.flip();
+            gl.glUniformMatrix3fv(location, 1, false, tempBufferFloat);
         });
     }
 
+    @Override
+    public void setMatrix3f(Program program, String name, Matrix3f ... values)
+    {
+        Matrix3f localValues[] = new Matrix3f[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Matrix3f(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 9 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                MatrixUtils.writeMatrixToBuffer(
+                    localValues[i], tempBufferFloat);
+            }
+            tempBufferFloat.flip();
+            gl.glUniformMatrix3fv(
+                location, localValues.length, false, tempBufferFloat);
+        });
+    }
 
     @Override
     public void setMatrix4f(Program program, String name, Matrix4f value)
@@ -281,8 +330,34 @@ class JOGLProgramHandler
         Matrix4f localValue = new Matrix4f(value);
         createSetter(program, name, location ->
         {
-            MatrixUtils.writeMatrixToBuffer(localValue, tempMatrix4fBuffer);
-            gl.glUniformMatrix4fv(location, 1, false, tempMatrix4fBuffer);
+            ensureTempBufferCapacity(16 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            MatrixUtils.writeMatrixToBuffer(localValue, tempBufferFloat);
+            tempBufferFloat.flip();
+            gl.glUniformMatrix4fv(location, 1, false, tempBufferFloat);
+        });
+    }
+    
+    @Override
+    public void setMatrix4f(Program program, String name, Matrix4f ... values)
+    {
+        Matrix4f localValues[] = new Matrix4f[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Matrix4f(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 16 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                MatrixUtils.writeMatrixToBuffer(
+                    localValues[i], tempBufferFloat);
+            }
+            tempBufferFloat.flip();
+            gl.glUniformMatrix4fv(
+                location, localValues.length, false, tempBufferFloat);
         });
     }
     
@@ -292,6 +367,20 @@ class JOGLProgramHandler
         createSetter(program, name, location ->
         {
             gl.glUniform1f(location, value);
+        });
+    }
+    
+    @Override
+    public void setFloat(Program program, String name, float ... values)
+    {
+        float localValues[] = values.clone();
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            tempBufferFloat.put(localValues);
+            tempBufferFloat.flip();
+            gl.glUniform1fv(location, localValues.length, tempBufferFloat);
         });
     }
     
@@ -307,6 +396,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple2f(Program program, String name, Tuple2f ... values)
+    {
+        Tuple2f localValues[] = new Tuple2f[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point2f(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 2 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferFloat);
+            }
+            tempBufferFloat.flip();
+            gl.glUniform2fv(location, localValues.length, tempBufferFloat);
+        });
+    }
     
     @Override
     public void setTuple3f(Program program, String name, Tuple3f tuple)
@@ -320,6 +430,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple3f(Program program, String name, Tuple3f ... values)
+    {
+        Tuple3f localValues[] = new Tuple3f[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point3f(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 3 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferFloat);
+            }
+            tempBufferFloat.flip();
+            gl.glUniform3fv(location, localValues.length, tempBufferFloat);
+        });
+    }
     
     @Override
     public void setTuple4f(Program program, String name, Tuple4f tuple)
@@ -334,6 +465,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple4f(Program program, String name, Tuple4f ... values)
+    {
+        Tuple4f localValues[] = new Tuple4f[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point4f(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 4 * Float.BYTES);
+            FloatBuffer tempBufferFloat = tempBuffer.asFloatBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferFloat);
+            }
+            tempBufferFloat.flip();
+            gl.glUniform4fv(location, localValues.length, tempBufferFloat);
+        });
+    }
     
     @Override
     public void setInt(Program program, String name, int value)
@@ -344,6 +496,19 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setInt(Program program, String name, int ... values)
+    {
+        int localValues[] = values.clone();
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * Integer.BYTES);
+            IntBuffer tempBufferInt = tempBuffer.asIntBuffer();
+            tempBufferInt.put(localValues);
+            tempBufferInt.flip();
+            gl.glUniform1iv(location, localValues.length, tempBufferInt);
+        });
+    }
 
     @Override
     public void setTuple2i(Program program, String name, Tuple2i tuple)
@@ -356,6 +521,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple2i(Program program, String name, Tuple2i ... values)
+    {
+        Tuple2i localValues[] = new Tuple2i[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point2i(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 2 * Integer.BYTES);
+            IntBuffer tempBufferInt = tempBuffer.asIntBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferInt);
+            }
+            tempBufferInt.flip();
+            gl.glUniform2iv(location, localValues.length, tempBufferInt);
+        });
+    }
     
     @Override
     public void setTuple3i(Program program, String name, Tuple3i tuple)
@@ -369,6 +555,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple3i(Program program, String name, Tuple3i ... values)
+    {
+        Tuple3i localValues[] = new Tuple3i[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point3i(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 3 * Integer.BYTES);
+            IntBuffer tempBufferInt = tempBuffer.asIntBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferInt);
+            }
+            tempBufferInt.flip();
+            gl.glUniform3iv(location, localValues.length, tempBufferInt);
+        });
+    }
     
     @Override
     public void setTuple4i(Program program, String name, Tuple4i tuple)
@@ -383,6 +590,27 @@ class JOGLProgramHandler
         });
     }
     
+    @Override
+    public void setTuple4i(Program program, String name, Tuple4i ... values)
+    {
+        Tuple4i localValues[] = new Tuple4i[values.length];
+        for (int i = 0; i < values.length; i++)
+        {
+            localValues[i] = new Point4i(values[i]);
+        }
+        createSetter(program, name, location ->
+        {
+            ensureTempBufferCapacity(localValues.length * 4 * Integer.BYTES);
+            IntBuffer tempBufferInt = tempBuffer.asIntBuffer();
+            for (int i = 0; i < localValues.length; i++)
+            {
+                TupleUtils.writeTupleToBuffer(
+                    localValues[i], tempBufferInt);
+            }
+            tempBufferInt.flip();
+            gl.glUniform4iv(location, localValues.length, tempBufferInt);
+        });
+    }
     
     /**
      * Package-private method used by the {@link JOGLRenderedObjectHandler} to

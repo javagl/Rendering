@@ -128,6 +128,9 @@ class JOGLGraphicsObjectHandler
     /**
      * Initializes the indices. Creates a new element array buffer and
      * buffers the indices that may be obtained with getIndices().
+     * 
+     * @param dataBuffer The {@link DataBuffer} containing the indices
+     * @return The {@link GLDataBuffer} for the indices
      */
     private GLDataBuffer initIndices(DataBuffer dataBuffer)
     {
