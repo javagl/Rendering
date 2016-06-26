@@ -49,24 +49,32 @@ public class GraphicsObjects
          * The indices for the {@link GraphicsObject} that is currently being
          * built
          */
-        private DataBuffer indices;
+        private final DataBuffer indices;
+        
+        /**
+         * The number of vertices of the object
+         */
+        private final int numVertices;
         
         /**
          * The {@link Mappings.Builder} for a {@link Mapping} that maps 
          * {@link Attribute}s to {@link DataBuffer}s
          */
-        private Mappings.Builder<Attribute, DataBuffer> dataBuffersBuilder;
+        private final Mappings.Builder<Attribute, DataBuffer> 
+            dataBuffersBuilder;
         
         /**
          * Creates a new Builder
          * 
          * @param indices The indices of the {@link GraphicsObject} being 
-         * built
+         * built. This may be <code>null</code> for non-indexed objects
+         * @param numVertices The number of vertices of the object
          */
-        private Builder(DataBuffer indices)
+        private Builder(DataBuffer indices, int numVertices)
         {
             this.indices = indices;
-            dataBuffersBuilder = Mappings.Builder.create();
+            this.numVertices = numVertices;
+            this.dataBuffersBuilder = Mappings.Builder.create();
         }
         
         /**
@@ -95,22 +103,52 @@ public class GraphicsObjects
             Mapping<Attribute, DataBuffer> dataBuffers = 
                 dataBuffersBuilder.build();
             GraphicsObject result = 
-                new DefaultGraphicsObject(indices, dataBuffers);
+                new DefaultGraphicsObject(indices, numVertices, dataBuffers);
             return result;
         }
     }
 
     /**
+     * Creates a {@link Builder} for {@link GraphicsObject} instances
+     * without indices.
+     *  
+     * @param numVertices The number of vertices that the object will have 
+     * @return The builder
+     * @throws IllegalArgumentException If the number of vertices is not 
+     * positive
+     */
+    public static Builder create(int numVertices)
+    {
+        if (numVertices <= 0)
+        {
+            throw new IllegalArgumentException("The number of vertices " + 
+                "must be positive, but is " + numVertices);
+        }
+        return new Builder(null, numVertices);
+    }
+    
+    /**
      * Creates a {@link Builder} for {@link GraphicsObject} instances.
      * The given indices are treated as <i>unsigned</i> values, because in 
      * OpenGL, indices always have to be unsigned.
      * 
      * @param indices The indices of the {@link GraphicsObject}
+     * @param numVertices The number of vertices that the object will have
      * @return The builder
+     * @throws NullPointerException If the given indices are <code>null</code>
+     * @throws IllegalArgumentException If the number of vertices is not 
+     * positive
      */
-    public static Builder create(ByteBuffer indices)
+    public static Builder create(ByteBuffer indices, int numVertices)
     {
-        return new Builder(DataBuffers.createDataBufferUnsignedByte(indices));
+        if (numVertices <= 0)
+        {
+            throw new IllegalArgumentException("The number of vertices " + 
+                "must be positive, but is " + numVertices);
+        }
+        Objects.requireNonNull(indices, "The indices may not be null");
+        return new Builder(
+            DataBuffers.createDataBufferUnsignedByte(indices), numVertices);
     }
 
     /**
@@ -119,11 +157,22 @@ public class GraphicsObjects
      * OpenGL, indices always have to be unsigned.
      * 
      * @param indices The indices of the {@link GraphicsObject}
+     * @param numVertices The number of vertices that the object will have
      * @return The builder
+     * @throws NullPointerException If the given indices are <code>null</code>
+     * @throws IllegalArgumentException If the number of vertices is not 
+     * positive
      */
-    public static Builder create(ShortBuffer indices)
+    public static Builder create(ShortBuffer indices, int numVertices)
     {
-        return new Builder(DataBuffers.createDataBufferUnsignedShort(indices));
+        if (numVertices <= 0)
+        {
+            throw new IllegalArgumentException("The number of vertices " + 
+                "must be positive, but is " + numVertices);
+        }
+        Objects.requireNonNull(indices, "The indices may not be null");
+        return new Builder(
+            DataBuffers.createDataBufferUnsignedShort(indices), numVertices);
     }
 
     /**
@@ -132,11 +181,22 @@ public class GraphicsObjects
      * OpenGL, indices always have to be unsigned.
      * 
      * @param indices The indices of the {@link GraphicsObject}
+     * @param numVertices The number of vertices that the object will have
      * @return The builder
+     * @throws NullPointerException If the given indices are <code>null</code>
+     * @throws IllegalArgumentException If the number of vertices is not 
+     * positive
      */
-    public static Builder create(IntBuffer indices)
+    public static Builder create(IntBuffer indices, int numVertices)
     {
-        return new Builder(DataBuffers.createDataBufferUnsignedInt(indices));
+        if (numVertices <= 0)
+        {
+            throw new IllegalArgumentException("The number of vertices " + 
+                "must be positive, but is " + numVertices);
+        }
+        Objects.requireNonNull(indices, "The indices may not be null");
+        return new Builder(
+            DataBuffers.createDataBufferUnsignedInt(indices), numVertices);
     }
 
     
@@ -153,10 +213,22 @@ public class GraphicsObjects
      * @param sizeX The number of points in x-direction
      * @param sizeY The number of points in y-direction
      * @return The new {@link GraphicsObject}
+     * @throws IllegalArgumentException If the one of the given sizes is not
+     * greater than 1.
      */
     public static GraphicsObject createPlane(
         int sizeX, int sizeY)
     {
+        if (sizeX <= 1)
+        {
+            throw new IllegalArgumentException(
+                "The sizeX must be greater than 1, but is " + sizeX);
+        }
+        if (sizeY <= 1)
+        {
+            throw new IllegalArgumentException(
+                "The sizeY must be greater than 1, but is " + sizeY);
+        }
         return createPlane(sizeX, sizeY, 
             Attributes.VERTICES, Attributes.NORMALS, Attributes.TEXCOORDS);
     }
@@ -175,6 +247,10 @@ public class GraphicsObjects
      * @param texCoordsAttribute The {@link Attribute} that should be used
      * for the texture coordinates. This may be <code>null</code>. 
      * @return The new {@link GraphicsObject}
+     * @throws NullPointerException If the vertices attribute is 
+     * <code>null</code>
+     * @throws IllegalArgumentException If the one of the given sizes is not
+     * greater than 1.
      */
     public static GraphicsObject createPlane(
         int sizeX, int sizeY,
@@ -182,10 +258,20 @@ public class GraphicsObjects
         Attribute normalsAttribute,
         Attribute texCoordsAttribute)
     {
+        if (sizeX <= 1)
+        {
+            throw new IllegalArgumentException(
+                "The sizeX must be greater than 1, but is " + sizeX);
+        }
+        if (sizeY <= 1)
+        {
+            throw new IllegalArgumentException(
+                "The sizeY must be greater than 1, but is " + sizeY);
+        }
         Objects.requireNonNull(verticesAttribute, 
             "The verticesAttribute may not be null");
         
-        int indices[] = new int[(sizeX-1)*(sizeY-1)*3*2];
+        int indices[] = new int[(sizeX - 1) * (sizeY - 1) * 3 * 2];
         int index = 0;
         for (int j = 0; j < sizeY - 1; j++)
         {
@@ -194,11 +280,11 @@ public class GraphicsObjects
                 int i0 = 0;
                 int i1 = 0;
                 int i2 = 0;
-                
+
                 i0 = i + j * sizeX;
                 i1 = i + (j + 1) * sizeX;
                 i2 = (i + 1) + (j + 1) * sizeX;
-                
+
                 indices[index++] = i0;
                 indices[index++] = i1;
                 indices[index++] = i2;
@@ -211,9 +297,9 @@ public class GraphicsObjects
                 indices[index++] = i1;
                 indices[index++] = i2;
             }
-        }         
+        }
         
-        float vertices[] = new float[sizeX*sizeY*3];
+        float vertices[] = new float[sizeX * sizeY * 3];
         index = 0;
         for (int j = 0; j < sizeY; j++)
         {
@@ -222,34 +308,34 @@ public class GraphicsObjects
                 float x = -0.5f + i * (1.0f / (sizeX - 1));
                 float y = -0.5f + j * (1.0f / (sizeY - 1));
                 float z = 0;
-                vertices[index*3+0] = x;
-                vertices[index*3+1] = y;
-                vertices[index*3+2] = z;
+                vertices[index * 3 + 0] = x;
+                vertices[index * 3 + 1] = y;
+                vertices[index * 3 + 2] = z;
                 index++;
             }
         }
         
-        float normals[] = new float[sizeX*sizeY*3];
+        float normals[] = new float[sizeX * sizeY * 3];
         index = 0;
         for (int j = 0; j < sizeY; j++)
         {
             for (int i = 0; i < sizeX; i++)
             {
-                normals[index*3+0] = 0;
-                normals[index*3+1] = 0;
-                normals[index*3+2] = 1;
+                normals[index * 3 + 0] = 0;
+                normals[index * 3 + 1] = 0;
+                normals[index * 3 + 2] = 1;
                 index++;
             }
         }
      
-        float texCoords[] = new float[sizeX*sizeY*2];
+        float texCoords[] = new float[sizeX * sizeY * 2];
         index = 0;
         for (int j = 0; j < sizeY; j++)
         {
             for (int i = 0; i < sizeX; i++)
             {
-                texCoords[index*2+0] = i * (1.0f / (sizeX - 1));
-                texCoords[index*2+1] = j * (1.0f / (sizeY - 1));
+                texCoords[index * 2 + 0] = i * (1.0f / (sizeX - 1));
+                texCoords[index * 2 + 1] = j * (1.0f / (sizeY - 1));
                 index++;
             }
         }
@@ -258,7 +344,8 @@ public class GraphicsObjects
         FloatBuffer normalsBuffer = BufferUtils.createDirectBuffer(normals);
         FloatBuffer texCoordsBuffer = BufferUtils.createDirectBuffer(texCoords);
         GraphicsObjects.Builder builder =
-            GraphicsObjects.create(BufferUtils.createDirectBuffer(indices));
+            GraphicsObjects.create(
+                BufferUtils.createDirectBuffer(indices), sizeX * sizeY);
         builder.set(verticesAttribute, verticesBuffer);
         if (normalsAttribute != null)
         {
@@ -304,6 +391,8 @@ public class GraphicsObjects
      * @param colorsAttribute The {@link Attribute} that should be used for
      * the colors. This may be <code>null</code>.
      * @return A default {@link GraphicsObject}
+     * @throws NullPointerException If the vertices attribute is 
+     * <code>null</code>
      */
     public static GraphicsObject createPlane(
         Attribute verticesAttribute,
@@ -357,7 +446,8 @@ public class GraphicsObjects
         FloatBuffer texCoordsBuffer = BufferUtils.createDirectBuffer(texCoords);
         FloatBuffer colorsBuffer = BufferUtils.createDirectBuffer(colors);
         GraphicsObjects.Builder builder =
-            GraphicsObjects.create(BufferUtils.createDirectBuffer(indices));
+            GraphicsObjects.create(
+                BufferUtils.createDirectBuffer(indices), 4);
         builder.set(verticesAttribute, verticesBuffer);
         if (normalsAttribute != null)
         {
@@ -407,6 +497,8 @@ public class GraphicsObjects
      * @param tangentsAttribute The {@link Attribute} that should be used for
      * the tangents. This may be <code>null</code>.
      * @return A default {@link GraphicsObject}
+     * @throws NullPointerException If the vertices attribute is 
+     * <code>null</code>
      */
     public static GraphicsObject createCube(
         Attribute verticesAttribute,
@@ -564,7 +656,8 @@ public class GraphicsObjects
         FloatBuffer colorsBuffer = BufferUtils.createDirectBuffer(colors);
         FloatBuffer tangentsBuffer = BufferUtils.createDirectBuffer(tangents);
         GraphicsObjects.Builder builder =
-            GraphicsObjects.create(BufferUtils.createDirectBuffer(indices));
+            GraphicsObjects.create(
+                BufferUtils.createDirectBuffer(indices), 24);
         builder.set(verticesAttribute, verticesBuffer);
         if (normalsAttribute != null)
         {
@@ -621,6 +714,8 @@ public class GraphicsObjects
      * @param colorsAttribute The {@link Attribute} that should be used for
      * the colors. This may be <code>null</code>.
      * @return The new {@link GraphicsObject}
+     * @throws NullPointerException If the vertices attribute is 
+     * <code>null</code>
      * @throws IllegalArgumentException If the given depth is negative
      */
     public static GraphicsObject createSphere(int depth,
@@ -634,7 +729,7 @@ public class GraphicsObjects
         if (depth < 0)
         {
             throw new IllegalArgumentException(
-                "The depth must be positive, but is "+depth);
+                "The depth must be positive, but is " + depth);
         }
         
         // Coordinates and indices taken from the redbook
@@ -717,7 +812,7 @@ public class GraphicsObjects
         
         FloatBuffer texCoordsBuffer = BufferUtils.createDirectBuffer(texCoords);
         GraphicsObjects.Builder builder =
-            GraphicsObjects.create(indices);
+            GraphicsObjects.create(indices, numVertices);
         builder.set(verticesAttribute, vertices);
         if (normalsAttribute != null)
         {
@@ -762,9 +857,9 @@ public class GraphicsObjects
 
         for (int i = 0; i < 3; i++) 
         {
-            v12.put(i, v1.get(i)+v2.get(i));
-            v23.put(i, v2.get(i)+v3.get(i));
-            v31.put(i, v3.get(i)+v1.get(i));
+            v12.put(i, v1.get(i) + v2.get(i));
+            v23.put(i, v2.get(i) + v3.get(i));
+            v31.put(i, v3.get(i) + v1.get(i));
         }
         normalize(v12);
         normalize(v23);
@@ -785,11 +880,11 @@ public class GraphicsObjects
         float x = v.get(0);
         float y = v.get(1);
         float z = v.get(2);
-        float length = (float)Math.sqrt(x*x+y*y+z*z);
+        float length = (float) Math.sqrt(x * x + y * y + z * z);
         float invLength = 1.0f / length;
-        v.put(0, x*invLength);
-        v.put(1, y*invLength);
-        v.put(2, z*invLength);
+        v.put(0, x * invLength);
+        v.put(1, y * invLength);
+        v.put(2, z * invLength);
     }
 
     /**
@@ -805,18 +900,18 @@ public class GraphicsObjects
         FloatBuffer v1, FloatBuffer v2, FloatBuffer v3, 
         FloatBuffer vertices, IntBuffer indices)
     {
-        indices.put(vertices.position()/3);
-        for (int i=0; i<3; i++)
+        indices.put(vertices.position() / 3);
+        for (int i = 0; i < 3; i++)
         {
             vertices.put(v1.get(i));
         }
-        indices.put(vertices.position()/3);
-        for (int i=0; i<3; i++)
+        indices.put(vertices.position() / 3);
+        for (int i = 0; i < 3; i++)
         {
             vertices.put(v3.get(i));
         }
-        indices.put(vertices.position()/3);
-        for (int i=0; i<3; i++)
+        indices.put(vertices.position() / 3);
+        for (int i = 0; i < 3; i++)
         {
             vertices.put(v2.get(i));
         }

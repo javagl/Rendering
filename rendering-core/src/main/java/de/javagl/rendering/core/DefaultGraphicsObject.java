@@ -39,9 +39,15 @@ import java.util.Objects;
 class DefaultGraphicsObject implements GraphicsObject
 {
     /**
-     * The {@link DataBuffer} containing the indices of this graphics object
+     * The {@link DataBuffer} containing the indices of this graphics object.
+     * This may be <code>null</code> for non-indexed geometry.
      */
     private final DataBuffer indices;
+    
+    /**
+     * The number of vertices that this object consists of.
+     */
+    private final int numVertices;
     
     /**
      * The {@link Mapping} from the {@link Attribute} instances to the 
@@ -59,14 +65,18 @@ class DefaultGraphicsObject implements GraphicsObject
      * and the given {@link Mapping} from the {@link Attribute}s to the 
      * {@link DataBuffer}s holding the data for the {@link Attribute}s
      * 
-     * @param indices The indices of this object
+     * @param indices The indices of this object. This may be <code>null</code>
+     * for non-indexed objects
+     * @param numVertices The number of vertices that this object consists of
      * @param dataBuffers The {@link Mapping} from the 
      * {@link Attribute}s to the {@link DataBuffer}s 
      */
     DefaultGraphicsObject(
-        DataBuffer indices, Mapping<Attribute, DataBuffer> dataBuffers)
+        DataBuffer indices, int numVertices, 
+        Mapping<Attribute, DataBuffer> dataBuffers)
     {
         this.indices = indices;
+        this.numVertices = numVertices;
         this.dataBuffers = dataBuffers;
         this.attributes = new ArrayList<Attribute>(dataBuffers.keySet());
     }
@@ -76,6 +86,12 @@ class DefaultGraphicsObject implements GraphicsObject
     public DataBuffer getIndices()
     {
         return indices;
+    }
+    
+    @Override
+    public int getNumVertices()
+    {
+        return numVertices;
     }
     
     @Override

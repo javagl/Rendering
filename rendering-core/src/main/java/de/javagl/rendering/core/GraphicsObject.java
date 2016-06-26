@@ -38,16 +38,25 @@ import java.util.List;
 public interface GraphicsObject
 {
     /**
-     * Returns the {@link DataBuffer} containing the indices. <br>
+     * Returns the {@link DataBuffer} containing the indices. This may
+     * be <code>null</code> for non-indexed objects.<br>
      * <br>
-     * It can be assumed that the {@link DataBuffer#getBuffer() buffer} of 
-     * the returned {@link DataBuffer} is either a <code>ByteBuffer</code>,
-     * <code>ShortBuffer</code> or an <code>IntBuffer</code>,
-     * depending on the {@link DataBuffer#getType() type}
+     * If it is not <code>null</code>, then it can be assumed that the 
+     * {@link DataBuffer#getBuffer() buffer} of the returned {@link DataBuffer} 
+     * is either a <code>ByteBuffer</code>, <code>ShortBuffer</code> or an 
+     * <code>IntBuffer</code>, depending on the 
+     * {@link DataBuffer#getType() type}
      * 
      * @return The buffer containing the indices 
      */
     DataBuffer getIndices();
+    
+    /**
+     * Returns the number of vertices that this object consists of
+     * 
+     * @return The number of vertices
+     */
+    int getNumVertices();
 
     /**
      * Returns the {@link DataBuffer} for the given {@link Attribute},

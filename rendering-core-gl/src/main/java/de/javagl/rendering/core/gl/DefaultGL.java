@@ -84,16 +84,20 @@ public class DefaultGL
     /**
      * Creates a new GLGraphicsObject with the given indices.
      * 
-     * @param indicesDataBuffer The indices data buffer
+     * @param indicesDataBuffer The indices data buffer. This may be 
+     * <code>null</code> for non-indexed geometry
+     * @param numVertices The number of vertices
      * @param dataBuffers The mapping from {@link Attribute}s to
      * {@link GLDataBuffer}s
      * @return The {@link GLGraphicsObject}
      */
     public static GLGraphicsObject createGLGraphicsObject(
         GLDataBuffer indicesDataBuffer, 
+        int numVertices,
         Map<Attribute, GLDataBuffer> dataBuffers)
     {
-        return new DefaultGLGraphicsObject(indicesDataBuffer, dataBuffers);
+        return new DefaultGLGraphicsObject(
+            indicesDataBuffer, numVertices, dataBuffers);
     }
 
     /**

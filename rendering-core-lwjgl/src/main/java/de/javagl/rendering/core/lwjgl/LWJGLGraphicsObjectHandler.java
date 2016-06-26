@@ -85,8 +85,12 @@ class LWJGLGraphicsObjectHandler
     @Override
     public GLGraphicsObject handleInternal(GraphicsObject graphicsObject)
     {
-        GLDataBuffer indicesDataBuffer = 
-            initIndices(graphicsObject.getIndices());
+        GLDataBuffer indicesDataBuffer = null;
+        DataBuffer indices = graphicsObject.getIndices();
+        if (indices != null)
+        {
+            indicesDataBuffer = initIndices(indices);
+        }
 
         Map<Attribute, GLDataBuffer> dataBuffers = 
             new LinkedHashMap<Attribute, GLDataBuffer>();
@@ -108,8 +112,8 @@ class LWJGLGraphicsObjectHandler
             }
         }
         GLGraphicsObject glGraphicsObject = 
-            DefaultGL.createGLGraphicsObject(
-                indicesDataBuffer, dataBuffers);
+            DefaultGL.createGLGraphicsObject(indicesDataBuffer, 
+                graphicsObject.getNumVertices(), dataBuffers);
         return glGraphicsObject;
     }
     
@@ -166,8 +170,13 @@ class LWJGLGraphicsObjectHandler
     public void releaseInternal(
         GraphicsObject graphicsObject, GLGraphicsObject glGraphicsObject)
     {
-        glDeleteBuffers(glGraphicsObject.getIndicesGLDataBuffer().getVBO());
-        indicesBuffers.remove(graphicsObject.getIndices());
+        GLDataBuffer indicesDataBuffer = 
+            glGraphicsObject.getIndicesGLDataBuffer();
+        if (indicesDataBuffer != null)
+        {
+            glDeleteBuffers(indicesDataBuffer.getVBO());
+            indicesBuffers.remove(graphicsObject.getIndices());
+        }
     }
 
     @Override

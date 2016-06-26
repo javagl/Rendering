@@ -263,12 +263,21 @@ class JOGLRenderedObjectHandler
         
         GLGraphicsObject glGraphicsObject = 
             glRenderedObject.getGLGraphicsObject();
-        GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer(); 
         gl.glBindVertexArray(glRenderedObject.getVertexArrayObject());
-        gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
-        gl.glDrawElements(
-            GL_TRIANGLES, indices.getSize(), indices.getType(), 0);
-        gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer();
+        if (indices != null)
+        {
+            gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
+            gl.glDrawElements(
+                GL_TRIANGLES, indices.getSize(), indices.getType(), 0);
+            gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+        else
+        {
+            gl.glDrawArrays(GL_TRIANGLES, 0, glGraphicsObject.getNumVertices());
+        }
+        
         gl.glBindVertexArray(0);
         gl.glBindTexture(GL_TEXTURE_2D, 0);
         gl.glUseProgram(0);

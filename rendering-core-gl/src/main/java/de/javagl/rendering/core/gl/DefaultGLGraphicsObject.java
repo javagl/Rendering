@@ -46,6 +46,11 @@ class DefaultGLGraphicsObject implements GLGraphicsObject
     private final GLDataBuffer indicesDataBuffer;
     
     /**
+     * The number of vertices
+     */
+    private final int numVertices;
+    
+    /**
      * The unmodifiable map from {@link Attribute}s 
      * to the {@link GLDataBuffer} for the respective attribute
      */
@@ -55,13 +60,17 @@ class DefaultGLGraphicsObject implements GLGraphicsObject
      * Creates a new DefaultGLGraphicsObject with the given indices
      * and mapping from {@link Attribute}s to {@link DataBuffer}s.
      * 
-     * @param indicesDataBuffer The indices data buffer
+     * @param indicesDataBuffer The indices data buffer. This may be 
+     * <code>null</code> for non-indexed geometry
+     * @param numVertices The number of vertices
      * @param dataBuffers The attribute mapping
      */
     DefaultGLGraphicsObject(GLDataBuffer indicesDataBuffer,
+        int numVertices,
         Map<Attribute, GLDataBuffer> dataBuffers)
     {
         this.indicesDataBuffer = indicesDataBuffer;
+        this.numVertices = numVertices;
         this.dataBuffers = Collections.unmodifiableMap(
             new LinkedHashMap<Attribute, GLDataBuffer>(dataBuffers));
     }
@@ -70,6 +79,12 @@ class DefaultGLGraphicsObject implements GLGraphicsObject
     public GLDataBuffer getIndicesGLDataBuffer()
     {
         return indicesDataBuffer;
+    }
+    
+    @Override
+    public int getNumVertices()
+    {
+        return numVertices;
     }
     
     @Override

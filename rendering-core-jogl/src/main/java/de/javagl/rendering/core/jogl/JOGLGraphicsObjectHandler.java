@@ -97,8 +97,12 @@ class JOGLGraphicsObjectHandler
     @Override
     protected GLGraphicsObject handleInternal(GraphicsObject graphicsObject)
     {
-        GLDataBuffer indicesDataBuffer = 
-            initIndices(graphicsObject.getIndices());
+        GLDataBuffer indicesDataBuffer = null;
+        DataBuffer indices = graphicsObject.getIndices();
+        if (indices != null)
+        {
+            indicesDataBuffer = initIndices(indices);
+        }
 
         Map<Attribute, GLDataBuffer> dataBuffers = 
             new LinkedHashMap<Attribute, GLDataBuffer>();
@@ -120,8 +124,8 @@ class JOGLGraphicsObjectHandler
             }
         }
         GLGraphicsObject glGraphicsObject = 
-            DefaultGL.createGLGraphicsObject(
-                indicesDataBuffer, dataBuffers);
+            DefaultGL.createGLGraphicsObject(indicesDataBuffer, 
+                graphicsObject.getNumVertices(), dataBuffers);
         return glGraphicsObject;
     }
     

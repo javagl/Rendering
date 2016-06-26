@@ -30,20 +30,28 @@ package de.javagl.rendering.core.gl;
 import de.javagl.rendering.core.Attribute;
 
 /**
- * Interface describing a graphical object in OpenGL. It mainly
- * consists of a buffer for indices, which may be bound as 
- * GL_ELEMENT_ARRAY_BUFFER, and VBO for the different 
- * {@link Attribute}s which are contained in this
- * object. 
+ * Interface describing a graphical object in OpenGL. It mainly consists of 
+ * a buffer for indices, and VBO for the different {@link Attribute}s which 
+ * are contained in this object. The indices buffer may be <code>null</code>,
+ * for non-indexed geometry. Otherwise, the indices buffer may be bound as 
+ * GL_ELEMENT_ARRAY_BUFFER.
  */
 public interface GLGraphicsObject
 {
     /**
-     * Returns the {@link GLDataBuffer} for the indices
+     * Returns the {@link GLDataBuffer} for the indices. This may be 
+     * <code>null</code> for non-indexed geometry.
      * 
      * @return The {@link GLDataBuffer} for the indices
      */
     GLDataBuffer getIndicesGLDataBuffer();
+    
+    /**
+     * Returns the number of vertices that this object consists of
+     * 
+     * @return The number of vertices
+     */
+    int getNumVertices();
     
     /**
      * Returns the {@link GLDataBuffer} for the given {@link Attribute}

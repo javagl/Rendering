@@ -30,6 +30,7 @@ import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
@@ -63,6 +64,7 @@ import de.javagl.rendering.core.handling.GraphicsObjectHandler;
 import de.javagl.rendering.core.handling.ProgramHandler;
 import de.javagl.rendering.core.handling.RenderedObjectHandler;
 import de.javagl.rendering.core.handling.TextureHandler;
+
 
 /**
  * Implementation of a {@link RenderedObjectHandler} using LWJGL
@@ -239,12 +241,21 @@ class LWJGLRenderedObjectHandler
         
         GLGraphicsObject glGraphicsObject = 
             glRenderedObject.getGLGraphicsObject();
-        GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer();
         glBindVertexArray(glRenderedObject.getVertexArrayObject());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
-        glDrawElements(
-            GL_TRIANGLES, indices.getSize(), indices.getType(), 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        
+        GLDataBuffer indices = glGraphicsObject.getIndicesGLDataBuffer();
+        if (indices != null)
+        {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.getVBO());
+            glDrawElements(
+                GL_TRIANGLES, indices.getSize(), indices.getType(), 0);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+        else
+        {
+            glDrawArrays(GL_TRIANGLES, 0, glGraphicsObject.getNumVertices());
+        }
+        
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         glUseProgram(0);
