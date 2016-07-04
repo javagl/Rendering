@@ -148,6 +148,7 @@ class JOGLDataBufferHandler
         switch (dataBuffer.getType())
         {
             case BYTE:
+            case UNSIGNED_BYTE:
             {
                 dataBuffer.getBuffer().rewind();
                 ByteBuffer data = (ByteBuffer)dataBuffer.getBuffer();
@@ -158,6 +159,7 @@ class JOGLDataBufferHandler
             }
 
             case SHORT:
+            case UNSIGNED_SHORT:
             {
                 ShortBuffer shortBuffer = mappedByteBuffer.asShortBuffer();
                 dataBuffer.getBuffer().rewind();
@@ -169,6 +171,7 @@ class JOGLDataBufferHandler
             }
             
             case INT:
+            case UNSIGNED_INT:
             {
                 IntBuffer intBuffer = mappedByteBuffer.asIntBuffer();
                 dataBuffer.getBuffer().rewind();

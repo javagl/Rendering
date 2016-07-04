@@ -70,6 +70,7 @@ class LWJGLDataBufferHandler
         switch (dataBuffer.getType())
         {
             case BYTE:
+            case UNSIGNED_BYTE:
             {
                 ByteBuffer buffer = (ByteBuffer)dataBuffer.getBuffer();
                 glBufferData(GL_ARRAY_BUFFER, buffer, GL_DYNAMIC_DRAW);
@@ -77,6 +78,7 @@ class LWJGLDataBufferHandler
             }
                 
             case SHORT:
+            case UNSIGNED_SHORT:
             {
                 ShortBuffer buffer = (ShortBuffer)dataBuffer.getBuffer();
                 glBufferData(GL_ARRAY_BUFFER, buffer, GL_DYNAMIC_DRAW);
@@ -84,6 +86,7 @@ class LWJGLDataBufferHandler
             }
 
             case INT:
+            case UNSIGNED_INT:
             {
                 IntBuffer buffer = (IntBuffer)dataBuffer.getBuffer();
                 glBufferData(GL_ARRAY_BUFFER, buffer, GL_DYNAMIC_DRAW);
@@ -171,6 +174,7 @@ class LWJGLDataBufferHandler
         switch (dataBuffer.getType())
         {
             case BYTE:
+            case UNSIGNED_BYTE:
             {
                 dataBuffer.getBuffer().rewind();
                 ByteBuffer data = (ByteBuffer)dataBuffer.getBuffer();
@@ -181,6 +185,7 @@ class LWJGLDataBufferHandler
             }
 
             case SHORT:
+            case UNSIGNED_SHORT:
             {
                 ShortBuffer shortBuffer = mappedByteBuffer.asShortBuffer();
                 dataBuffer.getBuffer().rewind();
@@ -192,6 +197,7 @@ class LWJGLDataBufferHandler
             }
                 
             case INT:
+            case UNSIGNED_INT:
             {
                 IntBuffer intBuffer = mappedByteBuffer.asIntBuffer();
                 dataBuffer.getBuffer().rewind();
