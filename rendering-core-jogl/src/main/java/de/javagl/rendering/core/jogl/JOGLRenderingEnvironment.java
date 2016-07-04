@@ -82,7 +82,7 @@ public class JOGLRenderingEnvironment
         {
             return;
         }
-        GLProfile profile = GLProfile.get(GLProfile.GL3);
+        GLProfile profile = GLProfile.get(GLProfile.GL3bc);
         GLCapabilities capabilities = new GLCapabilities(profile);
         capabilities.setNumSamples(2);
         capabilities.setSampleBuffers(true);
