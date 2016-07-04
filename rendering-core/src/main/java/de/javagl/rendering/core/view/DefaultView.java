@@ -86,7 +86,7 @@ class DefaultView implements View
     {
         camera = Cameras.create();
         projectionMatrix = new Matrix4f();
-        nearClippingPlane = 0.1f;
+        nearClippingPlane = 0.01f;
         farClippingPlane = 10000.0f;
         viewport = Rectangles.create(0, 0, 1, 1);
         aspect = 1.0f;
