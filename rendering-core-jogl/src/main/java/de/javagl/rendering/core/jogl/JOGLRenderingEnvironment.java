@@ -31,6 +31,7 @@ import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
 
 import java.awt.Component;
+import java.util.logging.Logger;
 
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -53,6 +54,12 @@ public class JOGLRenderingEnvironment
     extends AbstractRenderingEnvironment<Component> 
     implements RenderingEnvironment<Component>
 {
+    /**
+     * The logger used in this class
+     */
+    private static final Logger logger =
+        Logger.getLogger(JOGLRenderingEnvironment.class.getName());
+    
     /**
      * The GLCanvas, i.e. the rendering component of this renderer
      */
@@ -82,7 +89,8 @@ public class JOGLRenderingEnvironment
         {
             return;
         }
-        GLProfile profile = GLProfile.get(GLProfile.GL3bc);
+        GLProfile profile = GLProfile.getMaxProgrammable(true);
+        logger.config("GLProfile: " + profile);
         GLCapabilities capabilities = new GLCapabilities(profile);
         capabilities.setNumSamples(2);
         capabilities.setSampleBuffers(true);
@@ -123,10 +131,6 @@ public class JOGLRenderingEnvironment
 
             GL3 gl = (GL3)drawable.getGL();
             gl.setSwapInterval(0);
-
-            //gl = glComponent.setGL(new TraceGL3(gl, System.out)).getGL3();
-            //gl = glComponent.setGL(new DebugGL3(gl)).getGL3();
-            
             initComplete = true;
         }
         
@@ -138,7 +142,6 @@ public class JOGLRenderingEnvironment
             {
                 return;
             }
-            //System.out.println("Display on "+Thread.currentThread());
             render();
         }
         
